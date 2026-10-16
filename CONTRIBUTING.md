@@ -38,7 +38,6 @@ The repository layout and the authoring rules live in [CLAUDE.md](CLAUDE.md). Th
   - `.claude-plugin/marketplace.json`, with the entry `description` copied verbatim from `plugin.json`
   - the **Plugins** table in [README.md](README.md)
   - the plugin's own `README.md`
-  - the plugin dropdown in `.github/ISSUE_TEMPLATE/bug_report.yml`
 - **Keep ownership metadata.** `author` is `Devrise Technology <hello@devrisetech.com>`, and repository URLs point at `Devrisetech/claude-code-engineering-assembly`.
 - **Document behaviour.** A new or changed skill, agent, hook, or MCP server is described in the plugin's `README.md`.
 

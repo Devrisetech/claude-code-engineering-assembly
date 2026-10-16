@@ -50,7 +50,6 @@ The root `README.md` is the public face of the repo. Keep it aligned with the co
   1. the `.claude-plugin/marketplace.json` entry
   2. the root README **Plugins** table, plus the **Requirements** list when its dependencies change
   3. the plugin's own `README.md`
-  4. the plugin dropdown in `.github/ISSUE_TEMPLATE/bug_report.yml`
 - **Section contract.** The root README keeps these sections in this order: badges and description, Table of contents, About, Plugins, Requirements, Installation, Repository structure, Development, Contributing, Support, Maintainers, License. Add a section only for genuinely new top-level content, and update the table of contents when you do.
 - **Link, don't duplicate.** Contribution workflow lives in `CONTRIBUTING.md`, conduct rules in `CODE_OF_CONDUCT.md`, vulnerability reporting in `SECURITY.md`. The README links to them.
 - **Commands stay true.** When a validation or test command changes, update README **Development**, `CONTRIBUTING.md`, and the [Development model](#development-model) below together.
