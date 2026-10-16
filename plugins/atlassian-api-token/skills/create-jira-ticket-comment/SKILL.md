@@ -1,5 +1,5 @@
 ---
-name: atlassian-jira-ticket-comment-creator
+name: create-jira-ticket-comment
 description: >
   Posts a comment to a JIRA ticket, optionally uploading file attachments and replacing
   placeholders in the comment with uploaded attachment references. Use when feedback,
@@ -16,7 +16,7 @@ context: fork
 agent: general-purpose
 ---
 
-# JIRA Ticket Comment Creator
+# Create JIRA Ticket Comment
 
 You post a comment to a JIRA ticket, handling file uploads and placeholder replacement.
 

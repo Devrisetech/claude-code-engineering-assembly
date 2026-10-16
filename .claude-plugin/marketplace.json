@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "engineering-assembly",
-  "description": "Claude Code plugins for software engineering by Devrise Technology: requirement validation and QA automation, git session housekeeping, and MCP server bundles for Context7 and Atlassian.",
+  "description": "Claude Code plugins for software engineering by Devrise Technology: QA test automation, git session housekeeping, and MCP server bundles for Context7 and Atlassian.",
   "owner": {
     "name": "Devrise Technology",
     "email": "hello@devrisetech.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "implementation",
-      "description": "A structured workflow for software development tasks: validate requirements (bug, story, or general task) for completeness and clarity, run QA test automation on web or Android (via adb), and retrieve or post results to JIRA tickets.",
+      "description": "QA test automation for software development tasks: the automation-expert agent executes manual test cases, smoke and regression checks, and bug reproductions step-by-step on web or Android (via adb) and reports a PASS/FAIL table.",
       "category": "development",
       "source": "./plugins/implementation",
       "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/implementation"
@@ -23,7 +23,7 @@
     },
     {
       "name": "atlassian-api-token",
-      "description": "Bundles the Atlassian Remote MCP Server (Rovo) so Claude Code can access Jira, Confluence, Jira Service Management, Bitbucket, and Compass using a personal API token (Basic auth) instead of interactive SSO login.",
+      "description": "Bundles the Atlassian Remote MCP Server (Rovo) so Claude Code can access Jira, Confluence, Jira Service Management, Bitbucket, and Compass using a personal API token (Basic auth), plus the retrieve-jira-ticket and create-jira-ticket-comment skills for pulling ticket content in and posting comments with attachments back.",
       "category": "development",
       "source": "./plugins/atlassian-api-token",
       "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/atlassian-api-token"

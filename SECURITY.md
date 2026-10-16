@@ -23,7 +23,7 @@ These plugins run inside Claude Code on the user's machine. Issues of particular
 
 - **Hooks**, such as the `git` plugin's `SessionStart` hook: shell commands that run automatically at session start, including any way to make them execute unintended commands or modify repositories beyond their documented fast-forward-only behaviour.
 - **MCP server bundles** (`context7`, `atlassian-api-token`): leaking the API keys or tokens they read from environment variables.
-- **Skills and agents**, such as the `implementation` plugin's Jira attachment scripts: handling credentials, downloaded files, or untrusted ticket content unsafely.
+- **Skills and agents**, such as the `atlassian-api-token` plugin's Jira attachment scripts: handling credentials, downloaded files, or untrusted ticket content unsafely.
 
 Out of scope here:
 - Vulnerabilities in Claude Code itself: report them to Anthropic.

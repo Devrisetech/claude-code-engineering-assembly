@@ -1,7 +1,7 @@
 {
   "name": "atlassian-api-token",
-  "description": "Bundles the Atlassian Remote MCP Server (Rovo) so Claude Code can access Jira, Confluence, Jira Service Management, Bitbucket, and Compass using a personal API token (Basic auth) instead of interactive SSO login.",
-  "version": "1.0.1",
+  "description": "Bundles the Atlassian Remote MCP Server (Rovo) so Claude Code can access Jira, Confluence, Jira Service Management, Bitbucket, and Compass using a personal API token (Basic auth), plus the retrieve-jira-ticket and create-jira-ticket-comment skills for pulling ticket content in and posting comments with attachments back.",
+  "version": "1.1.0",
   "author": {
     "name": "Devrise Technology",
     "email": "hello@devrisetech.com"

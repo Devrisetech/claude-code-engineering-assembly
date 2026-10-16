@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code plugin marketplace](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-d97757.svg)](https://code.claude.com/docs/en/plugin-marketplaces)
 
-A [Claude Code](https://code.claude.com) plugin marketplace of software-engineering workflow plugins, maintained by [Devrise Technology](https://github.com/Devrisetech). It covers requirement validation and QA automation, git housekeeping at session start, and ready-made MCP server bundles for Context7 and Atlassian.
+A [Claude Code](https://code.claude.com) plugin marketplace of software-engineering workflow plugins, maintained by [Devrise Technology](https://github.com/Devrisetech). It covers QA test automation, git housekeeping at session start, and ready-made MCP server bundles for Context7 and Atlassian.
 
 ## Table of contents
 
@@ -20,16 +20,16 @@ A [Claude Code](https://code.claude.com) plugin marketplace of software-engineer
 
 ## About
 
-Engineering teams lose time on the same few things. They start work before a requirement is clear. They ship without anyone driving the change through the app. They open a session on stale branches or detached submodules. And they wire the same MCP servers into every project by hand. Each plugin in this marketplace takes one of those problems away, so every engineer on the team starts from the same baseline, installed with one command and kept up to date through the marketplace.
+Engineering teams lose time on the same few things. They ship without anyone driving the change through the app. They copy Jira ticket content in and results back out by hand. They open a session on stale branches or detached submodules. And they wire the same MCP servers into every project by hand. Each plugin in this marketplace takes one of those problems away, so every engineer on the team starts from the same baseline, installed with one command and kept up to date through the marketplace.
 
 ## Plugins
 
 | Plugin | Category | What it does |
 | --- | --- | --- |
-| [implementation](plugins/implementation) | development | Validates a requirement (bug, story, or task) for completeness. Runs manual test cases on web or Android (`adb`) through the `automation-expert` agent. Retrieves Jira tickets and posts results back to them. |
+| [implementation](plugins/implementation) | development | Runs manual test cases, smoke and regression checks, and bug reproductions on web or Android (`adb`) through the `automation-expert` agent. |
 | [git](plugins/git) | development | Fetches, prunes, and fast-forwards the branch and its top-level submodules at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
 | [context7](plugins/context7) | development | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
-| [atlassian-api-token](plugins/atlassian-api-token) | development | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). |
+| [atlassian-api-token](plugins/atlassian-api-token) | development | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
 
 Each plugin's own README documents its skills, configuration, and requirements.
 
@@ -41,9 +41,9 @@ Each plugin's own README documents its skills, configuration, and requirements.
 - [Claude Code](https://code.claude.com/docs/en/overview) with plugin support.
 - Per-plugin extras:
   - **git**: `git` and `bash` 3.2 or newer. `jq` is optional. `gh` is optional, and only the `recap` skill's pull-request section uses it.
-  - **implementation**: `adb` and an emulator or device for Android test runs. The Jira skills need two things: a connected Jira MCP integration, such as the `atlassian-api-token` plugin, and `MCP_ATLASSIAN_ACCOUNT_USERNAME` / `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` for attachment transfer.
+  - **implementation**: `adb` and an emulator or device for Android test runs.
   - **context7**: a Context7 API key in `MCP_CONTEXT7_API_KEY`.
-  - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`.
+  - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`. The Jira skills' attachment transfer also needs `curl`, `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN`.
 
 ## Installation
 
@@ -81,9 +81,10 @@ claude-code-engineering-assembly/
 ```
 
 A plugin ships only the components it needs:
-- `implementation` provides skills and an agent.
+- `implementation` provides an agent.
 - `git` provides hooks, skills, and a test suite.
-- `context7` and `atlassian-api-token` are thin wrappers around an MCP server.
+- `atlassian-api-token` wraps an MCP server and adds skills.
+- `context7` is a thin wrapper around an MCP server.
 
 ## Development
 

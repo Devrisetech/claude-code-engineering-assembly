@@ -1,42 +1,12 @@
 # Implementation Plugin
 
-A structured workflow for taking a software development task from raw requirement to a verified change on a running app — validate completeness, then exercise the result with QA test automation.
+QA test automation for software development tasks: drive a change through the running app — web or Android — and confirm it works before it ships.
 
 ## Overview
 
-Development tasks fail most often not because the code is wrong, but because teams skip steps: they act on a requirement before it's clear, or ship a change without anyone actually driving it through the app to confirm it works. `/validate` checks whether a requirement is ready to act on.
+Development tasks often fail not because the code is wrong, but because nobody actually drives the change through the app to confirm it works. This plugin bundles the `automation-expert` agent, which executes manual test cases and reproduction steps step-by-step on web or Android (via `adb`). Use it to verify acceptance criteria, reproduce a bug, or run a regression check once a change is made.
 
-Separately, the plugin bundles **QA test automation**: the `automation-expert` agent executes manual test cases and reproduction steps step-by-step on web or Android (via `adb`) — useful for verifying acceptance criteria, reproducing a bug, or running a regression check once a change is made.
-
-The plugin also bundles two **JIRA integration skills**: `atlassian-jira-ticket-retriever` pulls a ticket's title, description, comments, and attachments into a local directory for downstream processing, and `atlassian-jira-ticket-comment-creator` posts results (validation output, enrichment, QA findings) back as a ticket comment, including file attachments.
-
-## Skills
-
-### `/validate [task_requirement] [output_location?]`
-
-Checks whether a requirement (bug, story, or general task) has enough information to move forward with planning. Classifies the requirement, then checks it against the relevant completeness criteria.
-
-- **Requires the requirement text itself** — it does not fetch tickets from Jira or any other tracker. If the requirement is missing or too unclear to classify, this is a fatal error rather than a guess.
-- **On failure**: reports exactly which required elements are missing (e.g., "Pre-condition is missing — no environment or test account specified", "Acceptance Criteria not stated") so the author knows what to fix.
-- **On success**: reports the result and type. There is no enrichment step — a complete requirement is handed off as-is.
-
-| Argument | Required | Description |
-|---|---|---|
-| `task_requirement` | yes | The requirement text (bug report, user story, task description) |
-| `output_location` | no | File path or directory. Defaults to inline if omitted. |
-
-Completeness criteria by type:
-- **bug** — three distinct categories: **pre-condition** (environment, login/credentials, under-test project or data), **steps to reproduce** (the ordered actions that trigger the defect), and **assertion** (expected vs. actual result)
-- **story** — change description + acceptance criteria + scope
-- **general_task** — mission/objective + acceptance criteria + scope
-
-### `atlassian-jira-ticket-retriever`
-
-Fetches one or more JIRA tickets by URL and saves structured content (title, description, comments, attachments) to a local temp directory, for use by validation, enrichment, or planning workflows. Invoke it whenever a JIRA ticket URL appears in the input and its content needs to be pulled locally.
-
-### `atlassian-jira-ticket-comment-creator`
-
-Posts a comment to a JIRA ticket, optionally uploading file attachments and replacing `attachment:<filename>` placeholders in the comment body with inline JIRA references (`!file.png!` for images, `[file|^file]` otherwise). Also resolves `@mentions` to JIRA account IDs so the mentioned user gets notified. Use to deliver feedback, enrichment results, or validation output as a ticket comment.
+To work from Jira tickets — pull a ticket's content in, post QA results back — install the companion **`atlassian-api-token`** plugin, which ships the `retrieve-jira-ticket` and `create-jira-ticket-comment` skills.
 
 ## Agents
 
@@ -51,12 +21,7 @@ Before running any steps, it rebuilds and restarts the app under test (dev serve
 
 ## System prerequisites
 
-The `automation-expert` agent requires **adb** (Android platform-tools) and a running emulator or device.
-
-The `atlassian-jira-ticket-retriever` and `atlassian-jira-ticket-comment-creator` skills require:
-
-- A JIRA MCP integration installed and connected (e.g. the companion **`atlassian-api-token`** plugin) for ticket/comment/account-lookup calls.
-- `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` environment variables, used by the bundled `upload-file-to-attachment.sh` and `download-attachment-file.sh` scripts to authenticate directly against the JIRA Cloud REST API (`curl -u`) for attachment upload/download, which falls outside the MCP tool surface. Generate the API token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
+The `automation-expert` agent requires **adb** (Android platform-tools) and a running emulator or device for Android runs. Web runs use whatever browser automation skill or MCP tool is available in the session.
 
 ## Installation
 
@@ -67,20 +32,16 @@ The `atlassian-jira-ticket-retriever` and `atlassian-jira-ticket-comment-creator
 
 ## Recommended workflow
 
-```
-/validate "Users report 500 errors when uploading files over 10MB on Safari. Expected: upload succeeds. Actual: server returns 500."
-```
-
-Then, once a change is in place, hand acceptance criteria or a bug's steps to reproduce to the `automation-expert` agent to drive the app and confirm the result:
+Once a change is in place, hand acceptance criteria or a bug's steps to reproduce to the `automation-expert` agent to drive the app and confirm the result:
 
 ```
 Run these test steps against staging and report pass/fail: ...
 ```
 
-To work directly from a JIRA ticket instead of pasted text, retrieve it first and post results back when done:
+With the `atlassian-api-token` plugin installed, you can work from a Jira ticket and post the results back:
 
 ```
-Fetch https://yourname.atlassian.net/browse/DT-123 and validate the requirement.
+Fetch https://yourname.atlassian.net/browse/DT-123 and run its steps to reproduce against staging.
 ```
 
 ```
