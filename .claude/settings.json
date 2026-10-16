@@ -6,7 +6,6 @@
   },
   "plansDirectory": ".claude/plans",
   "attribution": {
-    "sessionUrl": false,
-    "commit": "Generated with AI\n\nCo-Authored-By: Claude <81847+claude@users.noreply.github.com>"
+    "sessionUrl": false
   }
 }
