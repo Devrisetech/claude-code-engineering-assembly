@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "engineering-assembly",
-  "description": "Directory of popular Claude Code extensions including development and productivity tools.",
+  "description": "Claude Code plugins for software engineering by Devrise Technology: requirement validation and QA automation, git session housekeeping, and MCP server bundles for Context7 and Atlassian.",
   "owner": {
     "name": "Devrise Technology",
     "email": "hello@devrisetech.com"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "implementation",
-      "description": "A structured validation workflow for software development tasks, plus QA test automation and JIRA integration. Validates requirement completeness, runs manual test cases on web (playwright-cli) or Android (adb) via the automation-expert agent, and retrieves/posts results to JIRA tickets.",
+      "description": "A structured workflow for software development tasks: validate requirements (bug, story, or general task) for completeness and clarity, run QA test automation on web or Android (via adb), and retrieve or post results to JIRA tickets.",
       "category": "development",
       "source": "./plugins/implementation",
       "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/implementation"
@@ -37,7 +37,7 @@
     },
     {
       "name": "git",
-      "description": "Repo-wide git housekeeping before the first prompt of every session, for any git repository. At SessionStart it runs two steps in one process: (1) fetch every branch and tag from the remote and prune stale branch and tag refs so remote-tracking refs match the remote; then (2) attach the worktree - fast-forward the branch this tree is on to the remote's default branch (main, falling back to master) using those just-fetched refs, and populate, attach, and fast-forward every top-level submodule to the superproject's recorded gitlink. Fast-forward only, so a diverged or dirty branch is left as is. Does nothing outside a git repo or in a repo with no remote, never fails a session, and injects one attached-mode summary line for the agent only when the attach step ran. Each step has its own off switch (GIT_PLUGIN_GIT_FETCH_DISABLED, GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED); any non-empty value disables that step. The latest launch status is kept per session under the OS temp dir and surfaced by the read-only launch-status skill; a read-only recap skill reports branch/tracking-remote/PR state for the superproject and each top-level submodule.",
+      "description": "Puts a project's git into a known-good state before the first prompt of every session, for any git repository. At SessionStart it runs two steps in order, in one process: (1) fetch every branch and tag from the remote and prune stale branch and tag refs, so remote-tracking refs match the remote; then (2) attach the worktree - fast-forward the branch this tree is on to the remote's default branch (main, falling back to master) using those just-fetched refs, and populate, attach, and fast-forward every top-level submodule to the superproject's recorded gitlink. Fast-forward only: a diverged or dirty branch is left exactly as it is. Does nothing outside a git repo or in a repo with no remote, never fails a session (always exits 0), and injects one attached-mode summary line for the agent only when the attach step ran. Each step has its own off switch (GIT_PLUGIN_GIT_FETCH_DISABLED, GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED); any non-empty value disables that step. The latest launch status is kept per session under the OS temp dir and reported on demand by the read-only launch-status skill, which also shows the attached branch and commit ids of the superproject, origin/main (or origin/master), local main (or master), and each submodule; a read-only recap skill reports branch/tracking-remote/PR state for the superproject and each top-level submodule.",
       "category": "development",
       "source": "./plugins/git",
       "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/git"
