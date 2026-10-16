@@ -12,7 +12,7 @@ Everyone taking part in this project is expected to follow the [Code of Conduct]
 
 ## Setting up
 
-You need [Claude Code](https://code.claude.com/docs/en/overview), `git`, `bash` and `jq`. Fork the repository, clone your fork, and create a branch:
+You need [Claude Code](https://code.claude.com/docs/en/overview), `git` and `bash`. Fork the repository, clone your fork, and create a branch:
 
 ```bash
 git clone https://github.com/<you>/claude-code-engineering-assembly.git

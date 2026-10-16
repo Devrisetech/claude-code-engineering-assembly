@@ -61,6 +61,7 @@ The `atlassian-jira-ticket-retriever` and `atlassian-jira-ticket-comment-creator
 ## Installation
 
 ```
+/plugin marketplace add Devrisetech/claude-code-engineering-assembly
 /plugin install implementation@engineering-assembly
 ```
 

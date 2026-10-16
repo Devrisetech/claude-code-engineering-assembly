@@ -1,6 +1,6 @@
 ---
 name: recap
-description: This skill should be used when the operator asks to "recap", "give me a recap", "where are we", "status of this session", "what's the state of my branches and PRs", or "catch me up on this conversation". Reports branch and tracking-remote state (each with its commit id) for the superproject and each top-level submodule, the pull requests for those branches with their status, and a recap of the current conversation reconciled against the work journal's open items.
+description: This skill should be used when the operator asks to "recap", "give me a recap", "where are we", "status of this session", "what's the state of my branches and PRs", or "catch me up on this conversation". Reports branch and tracking-remote state (each with its commit id) for the superproject and each top-level submodule, the pull requests for those branches with their status, and a recap of the current conversation, reconciled against the work journal's open items when the separate work-journal plugin is installed.
 disable-model-invocation: true
 argument-hint: [--fetch]
 allowed-tools: Bash(bash *collect-git-state.sh), Bash(RECAP_FETCH=1 bash *collect-git-state.sh)
