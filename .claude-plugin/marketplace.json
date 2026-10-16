@@ -36,13 +36,6 @@
       "homepage": "https://github.com/duylam/claude-code-engineering-assembly/tree/main/plugins/atlassian-api-token"
     },
     {
-      "name": "work-journal",
-      "description": "Cross-session memory for long-running work: append-only diary (LOG) and decision (DEC) logs under .claude/memory, grouped by work item (JIRA-123, RFC-7, \u2026), with derived open-item tracking so any later session can answer what is still pending, what changed on a ticket, and what was done since a date. Ships its own clock-in/clock-out protocol via a UserPromptSubmit hook.",
-      "category": "productivity",
-      "source": "./plugins/work-journal",
-      "homepage": "https://github.com/duylam/claude-code-engineering-assembly/tree/main/plugins/work-journal"
-    },
-    {
       "name": "git",
       "description": "Repo-wide git housekeeping before the first prompt of every session, for any git repository. At SessionStart it runs two steps in one process: (1) fetch every branch and tag from the remote and prune stale branch and tag refs so remote-tracking refs match the remote; then (2) attach the worktree - fast-forward the branch this tree is on to the remote's default branch (main, falling back to master) using those just-fetched refs, and populate, attach, and fast-forward every top-level submodule to the superproject's recorded gitlink. Fast-forward only, so a diverged or dirty branch is left as is. Does nothing outside a git repo or in a repo with no remote, never fails a session, and injects one attached-mode summary line for the agent only when the attach step ran. Each step has its own off switch (GIT_PLUGIN_GIT_FETCH_DISABLED, GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED); any non-empty value disables that step. The latest launch status is kept per session under the OS temp dir and surfaced by the read-only launch-status skill; a read-only recap skill reports branch/tracking-remote/PR state for the superproject and each top-level submodule.",
       "category": "development",
