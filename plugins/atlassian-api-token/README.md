@@ -121,6 +121,9 @@ Once connected, ask Claude to work with your Atlassian data, e.g.:
 
 ## Requirements
 
+> [!WARNING]
+> **Linux and macOS only.** The Jira skills run Bash scripts for attachment upload and download. Windows is not supported.
+
 - An Atlassian Cloud account (Jira / Confluence / etc.) with the Remote MCP Server enabled.
 - A personal Atlassian API token, base64-encoded as `email:api_token` and exported as
   `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`.

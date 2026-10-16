@@ -44,6 +44,9 @@ finishes, whether `claude` opened in the current directory or in a
 
 ## Requirements
 
+> [!WARNING]
+> **Linux and macOS only.** The `SessionStart` hook and the bundled skills run Bash scripts. Windows is not supported.
+
 - `git`
 - `bash` 3.2 or newer — the macOS system `/bin/bash` qualifies
 - `jq` — optional. Without it the hook falls back to plain-text output and a `sed`-based

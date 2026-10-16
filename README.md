@@ -24,14 +24,17 @@ Engineering teams lose time on the same few things. They ship without anyone dri
 
 ## Plugins
 
-| Plugin | Category | What it does |
-| --- | --- | --- |
-| [implementation](plugins/implementation) | development | Runs manual test cases, smoke and regression checks, and bug reproductions on web or Android (`adb`) through the `automation-expert` agent. |
-| [git](plugins/git) | development | Fetches, prunes, and fast-forwards the branch and its top-level submodules at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
-| [context7](plugins/context7) | development | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
-| [atlassian-api-token](plugins/atlassian-api-token) | development | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
+| Plugin | Category | Platforms | What it does |
+| --- | --- | --- | --- |
+| [implementation](plugins/implementation) | development | Any | Runs manual test cases, smoke and regression checks, and bug reproductions on web or Android (`adb`) through the `automation-expert` agent. |
+| [git](plugins/git) | development | **Linux, macOS only** | Fetches, prunes, and fast-forwards the branch and its top-level submodules at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
+| [context7](plugins/context7) | development | Any | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
+| [atlassian-api-token](plugins/atlassian-api-token) | development | **Linux, macOS only** | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
 
 Each plugin's own README documents its skills, configuration, and requirements.
+
+> [!WARNING]
+> **`git` and `atlassian-api-token` work only on Linux and macOS.** They run Bash scripts: `git` from its `SessionStart` hook and skills, `atlassian-api-token` from its Jira skills for attachment transfer. Windows is not supported. The other plugins have no scripts and run wherever Claude Code runs.
 
 > [!IMPORTANT]
 > Make sure you trust a plugin before installing or using it. Hooks run shell commands on your machine, and MCP servers receive the credentials you configure. Review each plugin's README for what it runs and which tools it uses.
@@ -39,6 +42,7 @@ Each plugin's own README documents its skills, configuration, and requirements.
 ## Requirements
 
 - [Claude Code](https://code.claude.com/docs/en/overview) with plugin support.
+- **Linux or macOS** for `git` and `atlassian-api-token` (see [Plugins](#plugins)).
 - Per-plugin extras:
   - **git**: `git` and `bash` 3.2 or newer. `jq` is optional. `gh` is optional, and only the `recap` skill's pull-request section uses it.
   - **implementation**: `adb` and an emulator or device for Android test runs.

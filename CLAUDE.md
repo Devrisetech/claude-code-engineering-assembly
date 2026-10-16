@@ -53,6 +53,7 @@ The root `README.md` is the public face of the repo. Keep it aligned with the co
 - **Section contract.** The root README keeps these sections in this order: badges and description, Table of contents, About, Plugins, Requirements, Installation, Repository structure, Development, Contributing, Support, Maintainers, License. Add a section only for genuinely new top-level content, and update the table of contents when you do.
 - **Link, don't duplicate.** Contribution workflow lives in `CONTRIBUTING.md`, conduct rules in `CODE_OF_CONDUCT.md`, vulnerability reporting in `SECURITY.md`. The README links to them.
 - **Commands stay true.** When a validation or test command changes, update README **Development**, `CONTRIBUTING.md`, and the [Development model](#development-model) below together.
+- **Platform support.** A plugin that runs scripts, from a hook or invoked by a skill or agent, supports only Linux and macOS. Mark it `**Linux, macOS only**` in the README **Plugins** table's Platforms column, list it in the warning under that table and in **Requirements**, and put the same warning in the plugin README's **Requirements** section. A plugin without scripts is `Any`.
 - Use relative links for in-repo files.
 
 ### Development model
