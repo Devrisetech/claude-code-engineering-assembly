@@ -29,8 +29,7 @@ Engineering teams lose time on the same few things. They start work before a req
 | [implementation](plugins/implementation) | development | Validates a requirement (bug, story, or task) for completeness. Runs manual test cases on web or Android (`adb`) through the `automation-expert` agent. Retrieves Jira tickets and posts results back to them. |
 | [git](plugins/git) | development | Fetches, prunes, and fast-forwards the branch and its top-level submodules at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
 | [context7](plugins/context7) | development | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
-| [atlassian-sso](plugins/atlassian-sso) | development | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, with OAuth 2.1 SSO login. |
-| [atlassian-api-token](plugins/atlassian-api-token) | development | The same Atlassian Remote MCP Server, authenticated with a personal API token (Basic auth) for headless or CI use. |
+| [atlassian-api-token](plugins/atlassian-api-token) | development | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). |
 
 Each plugin's own README documents its skills, configuration, and requirements.
 
@@ -42,9 +41,8 @@ Each plugin's own README documents its skills, configuration, and requirements.
 - [Claude Code](https://code.claude.com/docs/en/overview) with plugin support.
 - Per-plugin extras:
   - **git**: `git` and `bash` 3.2 or newer. `jq` is optional. `gh` is optional, and only the `recap` skill's pull-request section uses it.
-  - **implementation**: `adb` and an emulator or device for Android test runs. The Jira skills need two things: a connected Jira MCP integration, such as either `atlassian-*` plugin, and `MCP_ATLASSIAN_ACCOUNT_USERNAME` / `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` for attachment transfer.
+  - **implementation**: `adb` and an emulator or device for Android test runs. The Jira skills need two things: a connected Jira MCP integration, such as the `atlassian-api-token` plugin, and `MCP_ATLASSIAN_ACCOUNT_USERNAME` / `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` for attachment transfer.
   - **context7**: a Context7 API key in `MCP_CONTEXT7_API_KEY`.
-  - **atlassian-sso**: an Atlassian Cloud account and a browser for the OAuth login.
   - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`.
 
 ## Installation
@@ -85,7 +83,7 @@ claude-code-engineering-assembly/
 A plugin ships only the components it needs:
 - `implementation` provides skills and an agent.
 - `git` provides hooks, skills, and a test suite.
-- `context7` and the `atlassian-*` plugins are thin wrappers around an MCP server.
+- `context7` and `atlassian-api-token` are thin wrappers around an MCP server.
 
 ## Development
 

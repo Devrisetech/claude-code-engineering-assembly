@@ -7,8 +7,7 @@ more — with every action respecting your existing Atlassian access controls.
 
 Authentication uses a **personal API token** (HTTP Basic auth) instead of an interactive
 browser SSO flow. This is the right choice for headless environments, CI, or shared machines
-where a browser login is impractical. If you'd rather use interactive OAuth 2.1 SSO, use the
-companion **`atlassian-sso`** plugin.
+where a browser login is impractical.
 
 ## Overview
 
@@ -39,8 +38,8 @@ The server is defined as a streamable HTTP MCP server with a Basic auth header:
 }
 ```
 
-> The API-token endpoint is `https://mcp.atlassian.com/v1/mcp` (note: **not** the `/authv2`
-> path used by the SSO plugin). Claude Code expands `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}`
+> The API-token endpoint is `https://mcp.atlassian.com/v1/mcp` (**not** the `/authv2`
+> path used for OAuth SSO). Claude Code expands `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}`
 > from your environment at connect time.
 
 ## Setup

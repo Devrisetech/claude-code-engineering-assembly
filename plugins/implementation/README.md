@@ -55,7 +55,7 @@ The `automation-expert` agent requires **adb** (Android platform-tools) and a ru
 
 The `atlassian-jira-ticket-retriever` and `atlassian-jira-ticket-comment-creator` skills require:
 
-- A JIRA MCP integration installed and connected (e.g. the companion **`atlassian-sso`** or **`atlassian-api-token`** plugin) for ticket/comment/account-lookup calls.
+- A JIRA MCP integration installed and connected (e.g. the companion **`atlassian-api-token`** plugin) for ticket/comment/account-lookup calls.
 - `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` environment variables, used by the bundled `upload-file-to-attachment.sh` and `download-attachment-file.sh` scripts to authenticate directly against the JIRA Cloud REST API (`curl -u`) for attachment upload/download, which falls outside the MCP tool surface. Generate the API token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
 
 ## Installation
