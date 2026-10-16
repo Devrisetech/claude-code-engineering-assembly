@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Devrisetech/claude-code-engineering-assembly/blob/main/SECURITY.md
+    about: Report vulnerabilities privately as described in SECURITY.md, not in a public issue.
+  - name: Claude Code documentation
+    url: https://code.claude.com/docs
+    about: Questions about Claude Code itself, rather than these plugins.

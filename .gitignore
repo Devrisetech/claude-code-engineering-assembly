@@ -1,5 +1,6 @@
 ### Custom
 .claude/plans/
+.claude/settings.local.json
 .tmp/
 
 ### macOS

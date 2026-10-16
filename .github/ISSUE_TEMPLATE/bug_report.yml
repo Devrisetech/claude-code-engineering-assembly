@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a plugin that does not behave as its README describes.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. For security vulnerabilities, follow SECURITY.md instead of opening a public issue.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin and version
+      description: The affected plugin and its version, as shown by `claude plugin list`.
+      placeholder: "git 0.7.2"
+    validations:
+      required: true
+  - type: input
+    id: claude-code-version
+    attributes:
+      label: Claude Code version
+      description: Output of `claude --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. /plugin install ...
+        2. Run ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Error messages, hook output, or logs. Remove tokens and other secrets first.
+      render: shell

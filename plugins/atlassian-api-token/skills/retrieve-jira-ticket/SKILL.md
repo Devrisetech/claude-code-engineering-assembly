@@ -1,5 +1,5 @@
 ---
-name: atlassian-jira-ticket-retriever
+name: retrieve-jira-ticket
 description: >
   Fetches one or more JIRA tickets by URL and saves structured content (title, body, comments,
   attachments) to a local temp directory. Use when ticket content needs to be retrieved for
@@ -16,7 +16,7 @@ context: fork
 agent: general-purpose
 ---
 
-# JIRA Ticket Retriever
+# Retrieve JIRA Ticket
 
 You fetch JIRA tickets and save their content to a structured local directory.
 

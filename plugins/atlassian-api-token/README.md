@@ -7,8 +7,7 @@ more — with every action respecting your existing Atlassian access controls.
 
 Authentication uses a **personal API token** (HTTP Basic auth) instead of an interactive
 browser SSO flow. This is the right choice for headless environments, CI, or shared machines
-where a browser login is impractical. If you'd rather use interactive OAuth 2.1 SSO, use the
-companion **`atlassian-sso`** plugin.
+where a browser login is impractical.
 
 ## Overview
 
@@ -19,7 +18,8 @@ base64 value encodes `email:api_token`. The credential is read from the
 in this repo.
 
 This plugin ships the server configuration (`.mcp.json`) so you don't have to add it to each
-project's `.mcp.json` by hand.
+project's `.mcp.json` by hand. It also bundles two Jira skills, `retrieve-jira-ticket` and
+`create-jira-ticket-comment`, for moving ticket content in and results out.
 
 ## Configuration
 
@@ -39,8 +39,8 @@ The server is defined as a streamable HTTP MCP server with a Basic auth header:
 }
 ```
 
-> The API-token endpoint is `https://mcp.atlassian.com/v1/mcp` (note: **not** the `/authv2`
-> path used by the SSO plugin). Claude Code expands `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}`
+> The API-token endpoint is `https://mcp.atlassian.com/v1/mcp` (**not** the `/authv2`
+> path used for OAuth SSO). Claude Code expands `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}`
 > from your environment at connect time.
 
 ## Setup
@@ -83,9 +83,29 @@ need to enable the Remote MCP Server / Rovo for your site.
 ## Installation
 
 ```
-/plugin marketplace add https://raw.githubusercontent.com/duylam/claude-code-engineering-assembly/main/.claude-plugin/marketplace.json
+/plugin marketplace add Devrisetech/claude-code-engineering-assembly
 /plugin install atlassian-api-token@engineering-assembly
 ```
+
+## Skills
+
+### `retrieve-jira-ticket`
+
+Fetches one or more Jira tickets by URL and saves structured content (title, description,
+comments, attachments) to a local directory for downstream processing. Invoke it whenever a Jira
+ticket URL appears in the input and its content needs to be pulled locally.
+
+### `create-jira-ticket-comment`
+
+Posts a comment to a Jira ticket, optionally uploading file attachments and replacing
+`attachment:<filename>` placeholders in the comment body with inline Jira references (`!file.png!`
+for images, `[file|^file]` otherwise). Also resolves `@mentions` to Jira account IDs so the
+mentioned user gets notified.
+
+Both skills use the MCP server for ticket, comment and account-lookup calls. Attachment upload and
+download fall outside the MCP tool surface, so the bundled `download-attachment-file.sh` and
+`upload-file-to-attachment.sh` scripts call the Jira Cloud REST API directly (`curl -u`) with the
+`MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` environment variables.
 
 ## Usage
 
@@ -95,12 +115,22 @@ Once connected, ask Claude to work with your Atlassian data, e.g.:
 
 > Find the Confluence page describing our on-call rotation and give me the escalation steps.
 
+> Fetch https://yourname.atlassian.net/browse/DT-123 and summarize the open questions.
+
+> Post the QA results as a comment on https://yourname.atlassian.net/browse/DT-123, attaching the failure screenshot.
+
 ## Requirements
+
+> [!WARNING]
+> **Linux and macOS only.** The Jira skills run Bash scripts for attachment upload and download. Windows is not supported.
 
 - An Atlassian Cloud account (Jira / Confluence / etc.) with the Remote MCP Server enabled.
 - A personal Atlassian API token, base64-encoded as `email:api_token` and exported as
   `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`.
 - Network access to `https://mcp.atlassian.com`.
+- For the Jira skills' attachment transfer: `curl`, plus `MCP_ATLASSIAN_ACCOUNT_USERNAME` (your
+  Atlassian account email) and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` (an API token from
+  <https://id.atlassian.com/manage-profile/security/api-tokens>).
 
 ## References
 

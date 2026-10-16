@@ -48,7 +48,7 @@ no secret is committed to the repo.
 ## Installation
 
 ```
-/plugin marketplace add https://raw.githubusercontent.com/duylam/claude-code-engineering-assembly/main/.claude-plugin/marketplace.json
+/plugin marketplace add Devrisetech/claude-code-engineering-assembly
 /plugin install context7@engineering-assembly
 ```
 
