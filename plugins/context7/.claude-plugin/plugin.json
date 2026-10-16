@@ -1,9 +1,12 @@
 {
   "name": "context7",
   "description": "Bundles the Context7 MCP server (https://mcp.context7.com/mcp) so Claude Code can pull up-to-date, version-specific library documentation and code examples on demand.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
-    "name": "Duy Lam",
-    "email": "sej5h73eq@mozmail.com"
-  }
+    "name": "Devrise Technology",
+    "email": "hello@devrisetech.com"
+  },
+  "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/context7",
+  "repository": "https://github.com/Devrisetech/claude-code-engineering-assembly",
+  "license": "MIT"
 }

@@ -55,7 +55,7 @@ need to enable the Remote MCP Server / Rovo for your site.
 ## Installation
 
 ```
-/plugin marketplace add https://raw.githubusercontent.com/duylam/claude-code-engineering-assembly/main/.claude-plugin/marketplace.json
+/plugin marketplace add Devrisetech/claude-code-engineering-assembly
 /plugin install atlassian-sso@engineering-assembly
 ```
 

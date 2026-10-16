@@ -54,7 +54,7 @@ The bundled `recap` skill additionally uses `gh` for its pull-request section (o
 ## Installation
 
 ```
-/plugin marketplace add duylam/claude-code-engineering-assembly
+/plugin marketplace add Devrisetech/claude-code-engineering-assembly
 /plugin install git@engineering-assembly
 ```
 
