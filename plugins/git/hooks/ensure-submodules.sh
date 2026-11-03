@@ -299,6 +299,12 @@ main() {
             if [[ -n "$BRANCH" ]] && ensure_branch "$path"; then
                 sync_submodule "$path"
             fi
+            # Deliberately NOT gated on the branch/sync outcome above: nested
+            # population is an independent guarantee (step 1) from the
+            # branch/gitlink guarantees (steps 2-3), which only ever apply to
+            # the top-level submodule itself. A detached superproject HEAD, or
+            # a branch checkout that could not be attached, is no reason to
+            # also leave nested submodules unpopulated.
             if submodule_init_recursive; then
                 populate_nested "$REPO_ROOT/$path"
             fi

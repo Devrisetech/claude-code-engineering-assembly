@@ -70,8 +70,11 @@ C="$(fresh_clone one)"
 out="$(run "$C" GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE=1)"
 check "nested populated" "yes" "$(nested_populated "$C")"
 check "deep populated" "yes" "$(deep_populated "$C")"
-check "reported nested" "yes" "$([[ "$out" == *"initialized tracked/nested"* ]] && echo yes || echo no)"
-check "reported deep" "yes" "$([[ "$out" == *"initialized tracked/nested/deep"* ]] && echo yes || echo no)"
+# grep -x, not a substring match: "initialized tracked/nested" is itself a
+# prefix of "initialized tracked/nested/deep", so a substring check would
+# still pass even if the shallower line went missing.
+check "reported nested" "yes" "$(grep -qxF "initialized tracked/nested" <<<"$out" && echo yes || echo no)"
+check "reported deep" "yes" "$(grep -qxF "initialized tracked/nested/deep" <<<"$out" && echo yes || echo no)"
 check "nested stays detached, no branch" "" "$(git -C "$C/tracked/nested" symbolic-ref --short -q HEAD 2>/dev/null || true)"
 check "tracked still gets its branch" "main" "$(git -C "$C/tracked" symbolic-ref --short -q HEAD)"
 echo
@@ -80,6 +83,15 @@ echo "--- '=TRUE' (case-insensitive) ---"
 C="$(fresh_clone caps)"
 run "$C" GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE=TRUE >/dev/null
 check "nested populated" "yes" "$(nested_populated "$C")"
+echo
+
+echo "--- detached superproject HEAD: still populates, recursively, with no branch ---"
+C="$(fresh_clone detached)"
+git -C "$C" checkout -q --detach HEAD
+run "$C" GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE=1 >/dev/null
+check "tracked populated" "yes" "$([[ -e "$C/tracked/.git" ]] && echo yes || echo no)"
+check "nested populated too" "yes" "$(nested_populated "$C")"
+check "tracked left detached (no branch to mirror)" "" "$(git -C "$C/tracked" symbolic-ref --short -q HEAD 2>/dev/null || true)"
 echo
 
 echo "--- pre-populated tracked (with local work, already attached) is never rewound; nested still reached ---"
