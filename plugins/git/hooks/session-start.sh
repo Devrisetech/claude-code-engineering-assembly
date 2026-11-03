@@ -10,6 +10,9 @@
 #   2. Attach: fast-forward the branch this tree is on to the remote's default
 #      branch using those just-fetched refs, and attach every top-level
 #      submodule.          (skip with GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED)
+#      Submodule population is top-level only by default; set
+#      GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE to `1` or `true` to also populate
+#      every nested submodule beneath them.
 #
 # The fetch runs before the attach in the SAME process, so the attach always
 # reads fresh refs. That ordering is why no cross-process barrier is needed.
@@ -29,6 +32,10 @@
 # Off switches (each non-empty value disables that step):
 #   GIT_PLUGIN_GIT_FETCH_DISABLED              - skip the fetch step
 #   GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED - skip the attach step
+#
+# Opt-in switch (needs an explicit `1` or `true`; unlike the off switches above,
+# any other value - including "0" - leaves it off):
+#   GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE - also populate nested submodules
 #
 # Dependencies: git; jq (optional - only used to read cwd/session_id from the
 # hook payload, with a sed fallback).

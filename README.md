@@ -27,7 +27,7 @@ Engineering teams lose time on the same few things. They ship without anyone dri
 | Plugin | Category | Platforms | What it does |
 | --- | --- | --- | --- |
 | [implementation](plugins/implementation) | development | Any | Runs manual test cases, smoke and regression checks, and bug reproductions on web or Android (`adb`) through the `automation-expert` agent. |
-| [git](plugins/git) | development | **Linux, macOS only** | Fetches, prunes, and fast-forwards the branch and its top-level submodules at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
+| [git](plugins/git) | development | **Linux, macOS only** | Fetches, prunes, and fast-forwards the branch and its top-level submodules (nested ones optionally) at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
 | [context7](plugins/context7) | development | Any | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
 | [atlassian-api-token](plugins/atlassian-api-token) | development | **Linux, macOS only** | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
 

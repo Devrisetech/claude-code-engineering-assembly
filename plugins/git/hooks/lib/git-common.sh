@@ -41,6 +41,18 @@ worktree_attach_disabled() {
     [[ -n "${GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED:-}" ]]
 }
 
+# The plugin's one opt-IN switch, the inverse shape of the two above: it is off
+# unless set to an explicit truthy value, so an accidental "0" never turns it
+# on the way it would turn an off-switch off.
+#
+#   GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE - populate nested submodules too (default: top-level only)
+submodule_init_recursive() {
+    case "${GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE:-}" in
+        1|[Tt][Rr][Uu][Ee]) return 0 ;;
+    esac
+    return 1
+}
+
 # The per-session directory, keyed by session id so a session only ever sees its
 # own state and old sessions never overwrite it. It holds this session's latest
 # launch status (git.status).

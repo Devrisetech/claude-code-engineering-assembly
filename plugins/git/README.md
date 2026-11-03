@@ -86,6 +86,20 @@ to turn that step into a no-op; unset/empty means enabled (the default):
 
 Set both to disable the plugin entirely.
 
+### Recursive submodule init
+
+Submodule population is **top-level only by default**: nested submodules are left alone.
+Set `GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE` to `1` or `true` (case-insensitive) to also
+populate every nested submodule beneath them, as deep as `.gitmodules` goes. This is an
+opt-**in** switch, the inverse of the off switches above: any other value — unset, empty,
+`0`, `false` — leaves it off.
+
+Recursion only widens *population*. A nested submodule still gets no branch and no
+gitlink sync — it is left on the detached HEAD `git submodule update` checks it out to,
+same as a top-level submodule's own nested submodules always were. An already-populated
+nested submodule is never re-checked-out; it is only walked into, so a not-yet-populated
+submodule further down is still reached without rewinding anything above it.
+
 ### Rule zero: stay out of the way
 
 Nothing is synced, and **nothing is printed**, when the project is not inside a git
@@ -119,8 +133,10 @@ ignores submodule state (`--ignore-submodules=all`) and asks each submodule dire
 
 Runs against the tree the session actually opened in.
 
-1. **Populate** every top-level submodule, **one level deep** — nested submodules are
-   left alone.
+1. **Populate** every top-level submodule, **one level deep** by default — nested
+   submodules are left alone — or recursively when
+   `GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE` is set (see
+   [Recursive submodule init](#recursive-submodule-init)).
 2. **Attach** each top-level submodule to a local branch **named after the
    superproject's branch**, replacing the detached HEAD `git submodule update` leaves
    behind. A branch that has to be created starts where the submodule already stands; an
@@ -176,7 +192,7 @@ git/
 │   ├── hooks.json              # SessionStart only
 │   ├── session-start.sh        # entry: fetch + prune, then attach, persist status, one summary line
 │   ├── git-sync.sh             # worker: fast-forward the current branch, then chain the submodules
-│   ├── ensure-submodules.sh    # worker: populate (one level) + attach + fast-forward submodules
+│   ├── ensure-submodules.sh    # worker: populate (one level, or recursive) + attach + fast-forward submodules
 │   └── lib/git-common.sh       # shared helpers (repo/remote resolution, status, reporting)
 ├── skills/
 │   ├── launch-status/
@@ -190,11 +206,14 @@ git/
     ├── lib.sh                  # throwaway-repo scaffolding + assertions
     ├── test-fetch-prune.sh
     ├── test-fetch-before-attach.sh
+    ├── test-fetch-fail.sh
     ├── test-merge-sync.sh
     ├── test-submodule-sync.sh
+    ├── test-submodule-recursive.sh
     ├── test-stale-session-branch.sh
     ├── test-detached-noop.sh
-    └── test-disable-switch.sh
+    ├── test-disable-switch.sh
+    └── test-launch-status-refs.sh
 ```
 
 ```bash

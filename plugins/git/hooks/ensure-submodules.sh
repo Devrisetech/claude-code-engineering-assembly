@@ -4,8 +4,10 @@
 # ensure-submodules.sh - make this superproject's submodules ready to work in
 #
 # Guarantees, for every TOP-LEVEL submodule listed in .gitmodules:
-#   1. it is populated (cloned + checked out) ONE LEVEL - nested submodules are
-#      left alone, not initialized
+#   1. it is populated (cloned + checked out) ONE LEVEL by default - nested
+#      submodules are left alone, not initialized - unless
+#      GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE is set to `1` or `true`, in which
+#      case every not-yet-populated submodule beneath it is populated too
 #   2. it sits on a local branch whose name matches the superproject's branch,
 #      instead of the detached HEAD `git submodule update` leaves behind
 #   3. that branch is reconciled with the commit the superproject currently records
@@ -31,15 +33,17 @@
 # there. Branching from the gitlink instead would silently strand that work on
 # a commit nobody is standing on.
 #
-# Only TOP-LEVEL submodules get a branch, or a sync. Nested submodules are
-# populated but left on their gitlink: they are vendored third-party trees, and
-# creating a branch named after your feature inside somebody else's repo helps
-# no one.
+# Only TOP-LEVEL submodules get a branch, or a sync - whether or not
+# GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE is set. A nested submodule is left on its
+# gitlink (detached): it is a vendored third-party tree, and creating a branch
+# named after your feature inside somebody else's repo helps no one. The
+# recursive flag only widens step 1 (population); it never touches steps 2-3.
 #
 # Nothing here is destructive:
-#   - `git submodule update` is only run over a top-level submodule that is
-#     not populated yet, where there is no local work to rewind. A populated
-#     one is left exactly as it stands.
+#   - `git submodule update` is only run over a submodule - top-level or
+#     nested - that is not populated yet, where there is no local work to
+#     rewind. A populated one is left exactly as it stands, and (when
+#     recursive) simply walked into to reach what lies beneath it.
 #   - `git checkout -B` is never used, so a submodule branch that already
 #     carries local commits is never moved by the attach step.
 #   - the reconcile is fast-forward only, so a submodule branch with commits of
@@ -73,10 +77,12 @@ usage() {
     cat <<EOF
 Usage: $SCRIPT_NAME [-C <dir>]
 
-Populates every submodule recursively, attaches each top-level submodule to a
-branch named after the superproject's current branch, and reconciles that
-branch with the submodule's own remote (merge only, never destructive). Warns
-and succeeds when it cannot. Prints nothing when everything is already correct.
+Populates every top-level submodule one level deep (nested submodules too,
+when GIT_PLUGIN_SUBMODULE_INIT_RECURSIVE is \`1\` or \`true\`), attaches each
+top-level submodule to a branch named after the superproject's current
+branch, and fast-forwards that branch to the commit the superproject records
+for it (the gitlink; merge only, never destructive). Warns and succeeds when
+it cannot. Prints nothing when everything is already correct.
 
 Options:
   -C <dir>   Start from <dir> instead of the current directory
@@ -135,7 +141,8 @@ resolve_context() {
 }
 
 # Populate a top-level submodule. One level only: nested submodules are left
-# alone (they are vendored third-party trees, not this project's concern).
+# alone here (they are vendored third-party trees, not this project's
+# concern) - unless the caller follows up with populate_nested, below.
 ensure_populated() {
     local path="$1"
 
@@ -247,6 +254,38 @@ sync_submodule() {
     add_note "$path has local commits and cannot be fast-forwarded to the superproject gitlink (${gitlink_sha:0:7}); leaving it as is"
 }
 
+# Populate every submodule beneath $1 (an absolute path to an already-populated
+# submodule worktree), as deep as .gitmodules goes. Only called when
+# submodule_init_recursive is on.
+#
+# An already-populated nested submodule is never touched - same rule as
+# ensure_populated - but IS descended into, so a not-yet-populated submodule
+# several levels down is still reached without rewinding anything above it.
+# None of this grants a branch or a gitlink sync: that stays top-level only
+# (see the file header), so every nested submodule is left on the detached
+# HEAD `git submodule update` checks it out to.
+populate_nested() {
+    local repo="$1" name path sub rel
+
+    while IFS=$'\t' read -r name path; do
+        [[ -n "$path" ]] || continue
+        sub="$repo/$path"
+        rel="${sub#"$REPO_ROOT"/}"
+
+        if [[ -e "$sub/.git" ]]; then
+            populate_nested "$sub"
+            continue
+        fi
+
+        if run_capture git -C "$repo" submodule update --init -- "$path"; then
+            add_note "initialized $rel"
+            populate_nested "$sub"
+        else
+            add_warning "could not initialize $rel ($(capture_reason)); run: git -C '$repo' submodule update --init -- '$path'"
+        fi
+    done < <(submodule_entries "$repo")
+}
+
 main() {
     local name path
 
@@ -256,10 +295,20 @@ main() {
 
     while IFS=$'\t' read -r name path; do
         [[ -n "$path" ]] || continue
-        ensure_populated "$path" || continue
-        [[ -n "$BRANCH" ]] || continue
-        ensure_branch "$path" || continue
-        sync_submodule "$path"
+        if ensure_populated "$path"; then
+            if [[ -n "$BRANCH" ]] && ensure_branch "$path"; then
+                sync_submodule "$path"
+            fi
+            # Deliberately NOT gated on the branch/sync outcome above: nested
+            # population is an independent guarantee (step 1) from the
+            # branch/gitlink guarantees (steps 2-3), which only ever apply to
+            # the top-level submodule itself. A detached superproject HEAD, or
+            # a branch checkout that could not be attached, is no reason to
+            # also leave nested submodules unpopulated.
+            if submodule_init_recursive; then
+                populate_nested "$REPO_ROOT/$path"
+            fi
+        fi
     done < <(submodule_entries "$REPO_ROOT")
 
     finish
