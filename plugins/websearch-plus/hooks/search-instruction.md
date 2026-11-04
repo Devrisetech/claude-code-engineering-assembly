@@ -5,10 +5,9 @@ For any web search, use the tools below in the order listed. Use the built-in `W
 | Order | Tool | Provider |
 | --- | --- | --- |
 | 1 | `mcp__plugin_websearch-plus_wsplus-exa__web_search_exa` | Exa |
-| 2 | `mcp__plugin_websearch-plus_wsplus-parallel__web_search` | Parallel |
-| 3 | `mcp__plugin_websearch-plus_wsplus-tavily__tavily_search` | Tavily |
-| 4 | `mcp__plugin_websearch-plus_wsplus-youcom__you-search` | You.com |
-| 5 (final fallback) | `WebSearch` | Claude built-in |
+| 2 | `mcp__plugin_websearch-plus_wsplus-tavily__tavily_search` | Tavily |
+| 3 | `mcp__plugin_websearch-plus_wsplus-youcom__you-search` | You.com |
+| 4 (final fallback) | `WebSearch` | Claude built-in |
 
 ## Rules
 

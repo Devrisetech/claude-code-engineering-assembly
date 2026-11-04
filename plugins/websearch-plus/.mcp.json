@@ -7,13 +7,6 @@
         "x-api-key": "${MCP_EXA_API_KEY}"
       }
     },
-    "wsplus-parallel": {
-      "type": "http",
-      "url": "https://search.parallel.ai/mcp",
-      "headers": {
-        "Authorization": "Bearer ${MCP_PARALLEL_API_KEY}"
-      }
-    },
     "wsplus-tavily": {
       "type": "http",
       "url": "https://mcp.tavily.com/mcp/",

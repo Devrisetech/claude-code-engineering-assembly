@@ -1,12 +1,12 @@
 # websearch-plus Plugin
 
-Cuts the cost of Claude Code's built-in `WebSearch` by bundling four remote-hosted web-search MCP servers that have a free plan, and by telling Claude to use them first.
+Cuts the cost of Claude Code's built-in `WebSearch` by bundling three remote-hosted web-search MCP servers that have a free plan, and by telling Claude to use them first.
 
 ## Overview
 
 The plugin has two parts:
 
-1. **MCP servers** (`.mcp.json`): Exa, Parallel, Tavily and You.com, each authenticated with an API key read from an environment variable.
+1. **MCP servers** (`.mcp.json`): Exa, Tavily and You.com, each authenticated with an API key read from an environment variable.
 2. **SessionStart hook**: injects [`hooks/search-instruction.md`](hooks/search-instruction.md) into the session context (on `startup`, `resume`, `clear` and `compact`). It tells Claude to search with these tools in a fixed order, to keep using one tool until it hits a rate limit, a quota, or a runtime error (such as HTTP 500), then move to the next, and to use the built-in `WebSearch` only as the final fallback.
 
 ### Providers
@@ -16,10 +16,9 @@ The provider list is the maintainers' own choice: each has a hosted MCP endpoint
 | Order | Server name | Endpoint | Env var | Search tool |
 | --- | --- | --- | --- | --- |
 | 1 | `wsplus-exa` | `https://mcp.exa.ai/mcp` | `MCP_EXA_API_KEY` | `web_search_exa` |
-| 2 | `wsplus-parallel` | `https://search.parallel.ai/mcp` | `MCP_PARALLEL_API_KEY` | `web_search` |
-| 3 | `wsplus-tavily` | `https://mcp.tavily.com/mcp/` | `MCP_TAVILY_API_KEY` | `tavily_search` |
-| 4 | `wsplus-youcom` | `https://api.you.com/mcp` | `MCP_YOUCOM_API_KEY` | `you-search` |
-| 5 | built-in | n/a | n/a | `WebSearch` (final fallback) |
+| 2 | `wsplus-tavily` | `https://mcp.tavily.com/mcp/` | `MCP_TAVILY_API_KEY` | `tavily_search` |
+| 3 | `wsplus-youcom` | `https://api.you.com/mcp` | `MCP_YOUCOM_API_KEY` | `you-search` |
+| 4 | built-in | n/a | n/a | `WebSearch` (final fallback) |
 
 ### Choosing providers
 
@@ -41,20 +40,18 @@ The servers are streamable HTTP MCP servers. Each key is read from its environme
 }
 ```
 
-(Only one server is shown. See [`.mcp.json`](.mcp.json) for all four.)
+(Only one server is shown. See [`.mcp.json`](.mcp.json) for all three.)
 
 ## Setup
 
 1. Get an API key from each provider you want to use:
    - Exa: https://dashboard.exa.ai/api-keys
-   - Parallel: https://platform.parallel.ai
    - Tavily: https://app.tavily.com
    - You.com: https://you.com/platform
 2. Export the keys in your shell environment (for example in `~/.zshrc`):
 
    ```sh
    export MCP_EXA_API_KEY="..."
-   export MCP_PARALLEL_API_KEY="..."
    export MCP_TAVILY_API_KEY="..."
    export MCP_YOUCOM_API_KEY="..."
    ```
@@ -70,7 +67,6 @@ The server names share the `wsplus-` prefix so they are easy to allow in Claude 
   "permissions": {
     "allow": [
       "mcp__plugin_websearch-plus_wsplus-exa__web_search_exa",
-      "mcp__plugin_websearch-plus_wsplus-parallel__web_search",
       "mcp__plugin_websearch-plus_wsplus-tavily__tavily_search",
       "mcp__plugin_websearch-plus_wsplus-youcom__you-search"
     ]
