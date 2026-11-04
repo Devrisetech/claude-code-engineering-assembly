@@ -7,7 +7,7 @@ Cuts the cost of Claude Code's built-in `WebSearch` by bundling four remote-host
 The plugin has two parts:
 
 1. **MCP servers** (`.mcp.json`): Exa, Parallel, Tavily and You.com, each authenticated with an API key read from an environment variable.
-2. **SessionStart hook**: injects [`hooks/search-instruction.md`](hooks/search-instruction.md) into the session context (on `startup`, `resume`, `clear` and `compact`). It tells Claude to search with these tools in a fixed order, to keep using one tool until it hits a rate limit or quota, then move to the next, and to use the built-in `WebSearch` only as the final fallback.
+2. **SessionStart hook**: injects [`hooks/search-instruction.md`](hooks/search-instruction.md) into the session context (on `startup`, `resume`, `clear` and `compact`). It tells Claude to search with these tools in a fixed order, to keep using one tool until it hits a rate limit, a quota, or a runtime error (such as HTTP 500), then move to the next, and to use the built-in `WebSearch` only as the final fallback.
 
 ### Providers
 
