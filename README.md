@@ -30,7 +30,7 @@ Engineering teams lose time on the same few things. They ship without anyone dri
 | [git](plugins/git) | development | **Linux, macOS only** | Fetches, prunes, and fast-forwards the branch and its top-level submodules (nested ones optionally) at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
 | [context7](plugins/context7) | development | Any | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
 | [atlassian-api-token](plugins/atlassian-api-token) | development | **Linux, macOS only** | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
-| [websearch-plus](plugins/websearch-plus) | development | **Linux, macOS only** | Cuts built-in `WebSearch` cost: bundles three free-plan web-search MCP servers (Exa, Tavily, You.com) and injects a `SessionStart` instruction to use them first, one at a time until rate limit or quota, with `WebSearch` as the final fallback. |
+| [websearch-plus](plugins/websearch-plus) | development | **Linux, macOS only** | Cuts built-in `WebSearch` cost: bundles two free-plan web-search MCP servers (Tavily, You.com) and injects a `SessionStart` instruction to use them first, one at a time until rate limit or quota, with `WebSearch` as the final fallback. |
 
 Each plugin's own README documents its skills, configuration, and requirements.
 
@@ -49,7 +49,7 @@ Each plugin's own README documents its skills, configuration, and requirements.
   - **implementation**: `adb` and an emulator or device for Android test runs.
   - **context7**: a Context7 API key in `MCP_CONTEXT7_API_KEY`.
   - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`. The Jira skills' attachment transfer also needs `curl`, `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN`.
-  - **websearch-plus**: at least one of `MCP_EXA_API_KEY`, `MCP_TAVILY_API_KEY`, `MCP_YOUCOM_API_KEY`. Providers without a key are skipped.
+  - **websearch-plus**: at least one of `MCP_TAVILY_API_KEY`, `MCP_YOUCOM_API_KEY`. Providers without a key are skipped.
 
 ## Installation
 
