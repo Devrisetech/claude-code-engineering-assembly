@@ -11,19 +11,19 @@ The plugin has two parts:
 
 ### Providers
 
-Selected from [Exa's roundup of web search MCP servers](https://exa.ai/blog/best-web-search-mcp-servers) and [Keirolabs' 2026 web search API comparison](https://keirolabs.cloud/blog/web-search-apis-for-agents-2026): each has a hosted MCP endpoint, API-key authentication, and a free plan. Endpoints and tool names were checked against each provider's own docs.
+The provider list is the maintainers' own choice: each has a hosted MCP endpoint, API-key authentication, and a free plan. Endpoints and tool names come from each provider's own docs. Free-plan limits change, so check each provider's pricing page.
 
-| Order | Server name | Endpoint | Env var | Search tool | Free plan |
-| --- | --- | --- | --- | --- | --- |
-| 1 | `wsplus-exa` | `https://mcp.exa.ai/mcp` | `MCP_EXA_API_KEY` | `web_search_exa` | 20,000 searches/month ([Keirolabs](https://keirolabs.cloud/blog/web-search-apis-for-agents-2026)) |
-| 2 | `wsplus-parallel` | `https://search.parallel.ai/mcp` | `MCP_PARALLEL_API_KEY` | `web_search` | 5,000 requests/month plus $5 credit |
-| 3 | `wsplus-tavily` | `https://mcp.tavily.com/mcp/` | `MCP_TAVILY_API_KEY` | `tavily_search` | 1,000 credits/month |
-| 4 | `wsplus-youcom` | `https://api.you.com/mcp` | `MCP_YOUCOM_API_KEY` | `you-search` | 100 queries/day plus $100 credit |
-| 5 | built-in | n/a | n/a | `WebSearch` | final fallback |
+| Order | Server name | Endpoint | Env var | Search tool |
+| --- | --- | --- | --- | --- |
+| 1 | `wsplus-exa` | `https://mcp.exa.ai/mcp` | `MCP_EXA_API_KEY` | `web_search_exa` |
+| 2 | `wsplus-parallel` | `https://search.parallel.ai/mcp` | `MCP_PARALLEL_API_KEY` | `web_search` |
+| 3 | `wsplus-tavily` | `https://mcp.tavily.com/mcp/` | `MCP_TAVILY_API_KEY` | `tavily_search` |
+| 4 | `wsplus-youcom` | `https://api.you.com/mcp` | `MCP_YOUCOM_API_KEY` | `you-search` |
+| 5 | built-in | n/a | n/a | `WebSearch` (final fallback) |
 
-Free-plan figures are as reported by the sources above and may change; check each provider's pricing page.
+### Choosing providers
 
-Considered and left out: Linkup (free access is a trial, not a plan), Firecrawl (scrape-first, search is secondary), Brave and Serper (local MCP only), Perplexity (no free tier).
+You decide which providers are used. Set the API key only for the providers you want: a server whose variable is unset is not loaded, and Claude skips it. The order above is fixed in [`hooks/search-instruction.md`](hooks/search-instruction.md).
 
 ## Configuration
 
@@ -42,8 +42,6 @@ The servers are streamable HTTP MCP servers. Each key is read from its environme
 ```
 
 (Only one server is shown. See [`.mcp.json`](.mcp.json) for all four.)
-
-You do not need all four keys. A server whose variable is unset is not loaded, and the instruction tells Claude to skip tools that are not in its tool list.
 
 ## Setup
 
