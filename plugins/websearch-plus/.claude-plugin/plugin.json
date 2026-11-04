@@ -1,0 +1,12 @@
+{
+  "name": "websearch-plus",
+  "description": "Cuts built-in WebSearch usage cost by bundling two remote-hosted web-search MCP servers with free plans (Tavily, You.com; server names prefixed wsplus-, API keys from MCP_* env vars) and injecting a SessionStart instruction that makes Claude use them first, one at a time until its rate limit or quota is hit, with the built-in WebSearch as the final fallback.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Devrise Technology",
+    "email": "hello@devrisetech.com"
+  },
+  "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/websearch-plus",
+  "repository": "https://github.com/Devrisetech/claude-code-engineering-assembly",
+  "license": "MIT"
+}

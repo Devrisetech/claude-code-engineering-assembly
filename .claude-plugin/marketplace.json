@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
   "name": "engineering-assembly",
-  "description": "Claude Code plugins for software engineering by Devrise Technology: QA test automation, git session housekeeping, and MCP server bundles for Context7 and Atlassian.",
+  "description": "Claude Code plugins for software engineering by Devrise Technology: QA test automation, git session housekeeping, and MCP server bundles for Context7, Atlassian and low-cost web search.",
   "owner": {
     "name": "Devrise Technology",
     "email": "hello@devrisetech.com"
@@ -34,6 +34,13 @@
       "category": "development",
       "source": "./plugins/git",
       "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/git"
+    },
+    {
+      "name": "websearch-plus",
+      "description": "Cuts built-in WebSearch usage cost by bundling two remote-hosted web-search MCP servers with free plans (Tavily, You.com; server names prefixed wsplus-, API keys from MCP_* env vars) and injecting a SessionStart instruction that makes Claude use them first, one at a time until its rate limit or quota is hit, with the built-in WebSearch as the final fallback.",
+      "category": "development",
+      "source": "./plugins/websearch-plus",
+      "homepage": "https://github.com/Devrisetech/claude-code-engineering-assembly/tree/main/plugins/websearch-plus"
     }
   ]
 }

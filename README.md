@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code plugin marketplace](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-d97757.svg)](https://code.claude.com/docs/en/plugin-marketplaces)
 
-A [Claude Code](https://code.claude.com) plugin marketplace of software-engineering workflow plugins, maintained by [Devrise Technology](https://github.com/Devrisetech). It covers QA test automation, git housekeeping at session start, and ready-made MCP server bundles for Context7 and Atlassian.
+A [Claude Code](https://code.claude.com) plugin marketplace of software-engineering workflow plugins, maintained by [Devrise Technology](https://github.com/Devrisetech). It covers QA test automation, git housekeeping at session start, and ready-made MCP server bundles for Context7, Atlassian and low-cost web search.
 
 ## Table of contents
 
@@ -30,11 +30,12 @@ Engineering teams lose time on the same few things. They ship without anyone dri
 | [git](plugins/git) | development | **Linux, macOS only** | Fetches, prunes, and fast-forwards the branch and its top-level submodules (nested ones optionally) at `SessionStart`. Fast-forward only, never fails a session. Adds `launch-status` and `recap` skills. |
 | [context7](plugins/context7) | development | Any | Bundles the [Context7](https://context7.com) MCP server for up-to-date, version-specific library documentation. |
 | [atlassian-api-token](plugins/atlassian-api-token) | development | **Linux, macOS only** | Bundles the Atlassian Remote MCP Server (Rovo) for Jira, Confluence, Jira Service Management, Bitbucket, and Compass, authenticated with a personal API token (Basic auth). Adds `retrieve-jira-ticket` and `create-jira-ticket-comment` skills. |
+| [websearch-plus](plugins/websearch-plus) | development | **Linux, macOS only** | Cuts built-in `WebSearch` cost: bundles two free-plan web-search MCP servers (Tavily, You.com) and injects a `SessionStart` instruction to use them first, one at a time until rate limit or quota, with `WebSearch` as the final fallback. |
 
 Each plugin's own README documents its skills, configuration, and requirements.
 
 > [!WARNING]
-> **`git` and `atlassian-api-token` work only on Linux and macOS.** They run Bash scripts: `git` from its `SessionStart` hook and skills, `atlassian-api-token` from its Jira skills for attachment transfer. Windows is not supported. The other plugins have no scripts and run wherever Claude Code runs.
+> **`git`, `atlassian-api-token` and `websearch-plus` work only on Linux and macOS.** They run Bash scripts: `git` and `websearch-plus` from their `SessionStart` hooks (`git` also from its skills), `atlassian-api-token` from its Jira skills for attachment transfer. Windows is not supported. The other plugins have no scripts and run wherever Claude Code runs.
 
 > [!IMPORTANT]
 > Make sure you trust a plugin before installing or using it. Hooks run shell commands on your machine, and MCP servers receive the credentials you configure. Review each plugin's README for what it runs and which tools it uses.
@@ -42,12 +43,13 @@ Each plugin's own README documents its skills, configuration, and requirements.
 ## Requirements
 
 - [Claude Code](https://code.claude.com/docs/en/overview) with plugin support.
-- **Linux or macOS** for `git` and `atlassian-api-token` (see [Plugins](#plugins)).
+- **Linux or macOS** for `git`, `atlassian-api-token` and `websearch-plus` (see [Plugins](#plugins)).
 - Per-plugin extras:
   - **git**: `git` and `bash` 3.2 or newer. `jq` is optional. `gh` is optional, and only the `recap` skill's pull-request section uses it.
   - **implementation**: `adb` and an emulator or device for Android test runs.
   - **context7**: a Context7 API key in `MCP_CONTEXT7_API_KEY`.
   - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`. The Jira skills' attachment transfer also needs `curl`, `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN`.
+  - **websearch-plus**: at least one of `MCP_TAVILY_API_KEY`, `MCP_YOUCOM_API_KEY`. Providers without a key are skipped.
 
 ## Installation
 
@@ -89,6 +91,7 @@ A plugin ships only the components it needs:
 - `git` provides hooks, skills, and a test suite.
 - `atlassian-api-token` wraps an MCP server and adds skills.
 - `context7` is a thin wrapper around an MCP server.
+- `websearch-plus` bundles several MCP servers and a hook that injects usage instructions.
 
 ## Development
 
