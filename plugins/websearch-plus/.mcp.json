@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "wsplus-exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": {
+        "x-api-key": "${MCP_EXA_API_KEY}"
+      }
+    },
+    "wsplus-parallel": {
+      "type": "http",
+      "url": "https://search.parallel.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_PARALLEL_API_KEY}"
+      }
+    },
+    "wsplus-tavily": {
+      "type": "http",
+      "url": "https://mcp.tavily.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${MCP_TAVILY_API_KEY}"
+      }
+    },
+    "wsplus-youcom": {
+      "type": "http",
+      "url": "https://api.you.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MCP_YOUCOM_API_KEY}"
+      }
+    }
+  }
+}
