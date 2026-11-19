@@ -12,7 +12,7 @@ body:
     attributes:
       label: Plugin and version
       description: The affected plugin and its version, as shown by `claude plugin list`.
-      placeholder: "git 0.7.2"
+      placeholder: "<plugin-name> <version>, e.g. git 1.2.3"
     validations:
       required: true
   - type: input

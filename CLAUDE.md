@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 .claude-plugin/
   marketplace.json            # Marketplace index listing all plugins
-.github/                      # Issue/PR templates, CODEOWNERS, workflows
+.github/                      # Issue/PR templates, workflows
 plugins/<plugin-name>/
   .claude-plugin/plugin.json  # Plugin manifest (name, description, version, author, homepage, repository, license)
   .mcp.json                   # MCP server definitions (optional)
