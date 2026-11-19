@@ -5,8 +5,13 @@
 #
 # Two steps run in order, in this one process:
 #   1. Fetch: bring the repository's remote-tracking refs level with the remote -
-#      fetch every branch and every tag from every remote, prune stale branch and
-#      tag refs.                     (skip with GIT_PLUGIN_GIT_FETCH_DISABLED)
+#      fetch every branch from every remote, pruning each remote's own stale
+#      branch refs, then fetch tags from the primary remote only and prune stale
+#      tag refs against that one remote (tags are a single, unnamespaced ref
+#      space shared by every remote, so pruning them against more than one would
+#      delete a tag that is local-only, or lives on a different remote, as soon
+#      as the first remote lacking it was fetched).
+#                                     (skip with GIT_PLUGIN_GIT_FETCH_DISABLED)
 #   2. Attach: fast-forward the branch this tree is on to the remote's default
 #      branch using those just-fetched refs, and attach every top-level
 #      submodule.          (skip with GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED)
@@ -75,13 +80,32 @@ MAIN_REPO="$(resolve_main_repo "$cwd")" || exit 0
 REMOTE="$(first_remote "$MAIN_REPO")" || exit 0
 
 # --- Step 1: fetch + prune (unless disabled) --------------------------------
-# Every branch and every tag from every remote, pruning stale branch and tag
-# refs so the local remote-tracking refs match the remote exactly.
+# Every branch from every remote, pruning each remote's own stale branch refs
+# (safe: refs/remotes/<remote>/* is namespaced per remote, so one remote's
+# fetch can never prune another's branches). Tags are a single, unnamespaced
+# refs/tags/* space shared by every remote, so --prune-tags is run only
+# against the primary remote ($REMOTE) - pruning it against every remote in
+# turn would delete a tag that is local-only (unpushed, or pushed to a
+# different remote) as soon as the first remote lacking it was fetched.
 if ! git_fetch_disabled; then
-    if run_capture git -C "$MAIN_REPO" fetch --all --tags --prune --prune-tags; then
-        add_note "fetched and pruned $REMOTE (branches and tags)"
+    branches_ok=1
+    tags_ok=1
+    if ! run_capture git -C "$MAIN_REPO" fetch --all --prune; then
+        branches_ok=0
+        branches_reason="$(capture_reason)"
+    fi
+    if ! run_capture git -C "$MAIN_REPO" fetch "$REMOTE" --tags --prune --prune-tags; then
+        tags_ok=0
+        tags_reason="$(capture_reason)"
+    fi
+    if [[ "$branches_ok" -eq 1 && "$tags_ok" -eq 1 ]]; then
+        add_note "fetched every remote (branches, pruned) and pruned tags against $REMOTE"
+    elif [[ "$branches_ok" -eq 1 ]]; then
+        add_warning "fetched branches but could not prune tags against $REMOTE ($tags_reason)"
+    elif [[ "$tags_ok" -eq 1 ]]; then
+        add_warning "pruned tags against $REMOTE but could not fetch $REMOTE ($branches_reason)"
     else
-        add_warning "could not fetch $REMOTE ($(capture_reason))"
+        add_warning "could not fetch $REMOTE ($branches_reason)"
     fi
 fi
 

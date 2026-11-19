@@ -52,7 +52,7 @@ echo
 echo "--- the hook stays silent to the agent and records human status ---"
 check "no additionalContext emitted (agent sees nothing)" "" "$out"
 check "status file records the fetch" "yes" \
-      "$(grep -q 'fetched and pruned' "${TMPDIR:-/tmp}/claude-git/$SID/git.status" 2>/dev/null && echo yes || echo no)"
+      "$(grep -q 'fetched every remote' "${TMPDIR:-/tmp}/claude-git/$SID/git.status" 2>/dev/null && echo yes || echo no)"
 echo
 
 echo "--- rule zero: nothing outside a git repo, or with no remote ---"
