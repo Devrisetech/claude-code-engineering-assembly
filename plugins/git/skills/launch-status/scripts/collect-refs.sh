@@ -36,10 +36,17 @@ default_line() {
     echo "${prefix}${name} (${sha:-unreadable})"
 }
 
-root="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-    echo "git: not inside a git repository."
-    exit 0
-}
+# Prefer the superproject's own root over the toplevel of whatever directory
+# this was run from, so a launch-status run from inside a submodule still
+# reports the superproject (matching the recap skill) instead of that one
+# submodule in isolation.
+root="$(git rev-parse --show-superproject-working-tree 2>/dev/null)"
+if [[ -z "$root" ]]; then
+    root="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "git: not inside a git repository."
+        exit 0
+    }
+fi
 
 echo "Repository: $root"
 echo "  attached branch:    $(head_line "$root")"

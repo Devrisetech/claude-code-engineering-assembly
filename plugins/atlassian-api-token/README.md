@@ -30,7 +30,7 @@ The server is defined as a streamable HTTP MCP server with a Basic auth header:
   "mcpServers": {
     "atlassian-api-token": {
       "type": "http",
-      "url": "https://mcp.atlassian.com/v1/mcp",
+      "url": "https://mcp.atlassian.com/v2/mcp",
       "headers": {
         "Authorization": "Basic ${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}"
       }
@@ -39,9 +39,12 @@ The server is defined as a streamable HTTP MCP server with a Basic auth header:
 }
 ```
 
-> The API-token endpoint is `https://mcp.atlassian.com/v1/mcp` (**not** the `/authv2`
-> path used for OAuth SSO). Claude Code expands `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}`
-> from your environment at connect time.
+> The API-token endpoint is `https://mcp.atlassian.com/v2/mcp` (**not** the `/authv2`
+> path used for OAuth SSO; `/v1/mcp` also still answers Basic-auth requests as of this
+> writing, but Atlassian has deprecated it for removal on 2027-03-01 — this plugin uses
+> `/v2/mcp`, which responds to the same Basic auth header). Claude Code expands
+> `${MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN}` from your environment at connect
+> time.
 
 ## Setup
 
@@ -97,15 +100,22 @@ ticket URL appears in the input and its content needs to be pulled locally.
 
 ### `create-jira-ticket-comment`
 
-Posts a comment to a Jira ticket, optionally uploading file attachments and replacing
-`attachment:<filename>` placeholders in the comment body with inline Jira references (`!file.png!`
-for images, `[file|^file]` otherwise). Also resolves `@mentions` to Jira account IDs so the
-mentioned user gets notified.
+Posts a comment to a Jira ticket as Markdown, optionally uploading file attachments first and
+replacing `attachment:<filename>` placeholders in the comment body with a plain `📎 \`filename\``
+reference. Jira Cloud's markdown comment API has no working syntax to inline-embed an
+already-uploaded attachment (that's a Jira platform limitation, not something this skill works
+around), so an uploaded file is referenced by name rather than embedded. `@mentions` are replaced
+with the person's resolved display name in bold, for readability; Jira only sends a real
+notification for a mention built as a native ADF node, which this skill does not construct, so
+tag people directly in the Jira UI when a notification is required.
 
 Both skills use the MCP server for ticket, comment and account-lookup calls. Attachment upload and
 download fall outside the MCP tool surface, so the bundled `download-attachment-file.sh` and
-`upload-file-to-attachment.sh` scripts call the Jira Cloud REST API directly (`curl -u`) with the
-`MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` environment variables.
+`upload-file-to-attachment.sh` scripts call the Jira Cloud REST API directly (`curl`, credentials
+via `.netrc`, never on the command line) with the `MCP_ATLASSIAN_ACCOUNT_USERNAME` and
+`MCP_ATLASSIAN_ACCOUNT_API_TOKEN` environment variables; `download-attachment-file.sh` only ever
+sends that credential to an `https://*.atlassian.net` host. `create-jira-ticket-comment` also uses
+`jq` to read the uploaded file's name back out of the upload script's JSON response.
 
 ## Usage
 
@@ -128,8 +138,8 @@ Once connected, ask Claude to work with your Atlassian data, e.g.:
 - A personal Atlassian API token, base64-encoded as `email:api_token` and exported as
   `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`.
 - Network access to `https://mcp.atlassian.com`.
-- For the Jira skills' attachment transfer: `curl`, plus `MCP_ATLASSIAN_ACCOUNT_USERNAME` (your
-  Atlassian account email) and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` (an API token from
+- For the Jira skills' attachment transfer: `curl` and `jq`, plus `MCP_ATLASSIAN_ACCOUNT_USERNAME`
+  (your Atlassian account email) and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN` (an API token from
   <https://id.atlassian.com/manage-profile/security/api-tokens>).
 
 ## References

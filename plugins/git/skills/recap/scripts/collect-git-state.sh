@@ -102,8 +102,8 @@ report_repo() {
   if [ -z "$porcelain" ]; then
     worktree="clean"
   else
-    staged=$(printf '%s\n' "$porcelain" | grep -c '^[MADRC]' || true)
-    unstaged=$(printf '%s\n' "$porcelain" | grep -c '^.[MD]' || true)
+    staged=$(printf '%s\n' "$porcelain" | grep -c '^[MADRCUT]' || true)
+    unstaged=$(printf '%s\n' "$porcelain" | grep -c '^.[MDUT]' || true)
     untracked=$(printf '%s\n' "$porcelain" | grep -c '^??' || true)
     worktree="dirty -- staged $staged, unstaged $unstaged, untracked $untracked"
   fi
@@ -117,7 +117,11 @@ report_repo() {
   else
     local prs err
     err=$(mktemp)
-    prs=$("$GH_BIN" pr list \
+    # `gh` resolves which GitHub repo to query from the CURRENT directory's
+    # remote, not from a `--repo` flag here, so it must be run from inside
+    # $dir -- otherwise every submodule's lookup silently queries whichever
+    # repo the caller's cwd happens to be in (e.g. the superproject).
+    prs=$(cd "$dir" && "$GH_BIN" pr list \
             --head "$branch" \
             --state all \
             --limit 10 \
@@ -165,7 +169,10 @@ if [ ! -f "$ROOT/.gitmodules" ]; then
   exit 0
 fi
 
-paths=$("$GIT_BIN" -C "$ROOT" config --file .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null | awk '{print $2}')
+# Strip the "submodule.<name>.path" key, keeping everything after the first
+# space -- a plain `awk '{print $2}'` would cut a submodule path that itself
+# contains a space at the first one.
+paths=$("$GIT_BIN" -C "$ROOT" config --file .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null | sed 's/^[^ ]* //')
 
 if [ -z "$paths" ]; then
   echo "== Submodules =="

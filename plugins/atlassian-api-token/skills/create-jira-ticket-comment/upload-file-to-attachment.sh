@@ -6,11 +6,21 @@
 
 set -euo pipefail
 
-readonly SCRIPT_NAME="$(basename "$0")"
+SCRIPT_NAME="$(basename "$0")"
+readonly SCRIPT_NAME
 
 JIRA_SITE_URL=""
 FILE_PATH=""
 TICKET_KEY=""
+RESPONSE_FILE=""
+
+cleanup() {
+    if [[ -n "$RESPONSE_FILE" && -f "$RESPONSE_FILE" ]]; then
+        rm -f "$RESPONSE_FILE"
+    fi
+}
+
+trap cleanup EXIT
 
 usage() {
     echo "Usage: $SCRIPT_NAME --jira-site-url <url> --file-path <path> --ticket-key <key>"
@@ -39,6 +49,14 @@ validate_requirements() {
         echo "Error: file not found: $FILE_PATH" >&2
         exit 1
     fi
+    if [[ -z "${MCP_ATLASSIAN_ACCOUNT_USERNAME:-}" ]]; then
+        echo "Error: MCP_ATLASSIAN_ACCOUNT_USERNAME is not set" >&2
+        exit 1
+    fi
+    if [[ -z "${MCP_ATLASSIAN_ACCOUNT_API_TOKEN:-}" ]]; then
+        echo "Error: MCP_ATLASSIAN_ACCOUNT_API_TOKEN is not set" >&2
+        exit 1
+    fi
 }
 
 main() {
@@ -46,22 +64,21 @@ main() {
 
     local site_url="${JIRA_SITE_URL%/}"
     local api_url="${site_url}/rest/api/3/issue/${TICKET_KEY}/attachments"
-    local response_file
-    response_file="$(mktemp)"
+
+    RESPONSE_FILE="$(mktemp)"
 
     local http_code
     local curl_exit=0
-    http_code=$(curl -s -w "%{http_code}" \
-        -o "$response_file" \
+    http_code=$(curl -sS -w "%{http_code}" \
+        -o "$RESPONSE_FILE" \
         -u "$MCP_ATLASSIAN_ACCOUNT_USERNAME:$MCP_ATLASSIAN_ACCOUNT_API_TOKEN" \
         -X POST \
         -H "X-Atlassian-Token: no-check" \
-        -F "file=@${FILE_PATH}" \
+        -F "file=@\"${FILE_PATH}\"" \
         "$api_url") || curl_exit=$?
 
     local response
-    response="$(cat "$response_file")"
-    rm -f "$response_file"
+    response="$(cat "$RESPONSE_FILE")"
 
     if [[ "$curl_exit" -ne 0 ]]; then
         echo "$response" >&2
@@ -79,15 +96,15 @@ main() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --jira-site-url)
-            JIRA_SITE_URL="$2"
+            JIRA_SITE_URL="${2:?--jira-site-url needs a value}"
             shift 2
             ;;
         --file-path)
-            FILE_PATH="$2"
+            FILE_PATH="${2:?--file-path needs a value}"
             shift 2
             ;;
         --ticket-key)
-            TICKET_KEY="$2"
+            TICKET_KEY="${2:?--ticket-key needs a value}"
             shift 2
             ;;
         -h|--help)

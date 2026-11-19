@@ -58,7 +58,7 @@ outB="$(run_hook "$B" "dis-attach-$$" GIT_PLUGIN_WORKTREE_ATTACHED_MODE_DISABLED
 check "origin/main advanced (fetch ran)" "$B_TIP" "$(git -C "$B" rev-parse origin/main)"
 check "feature NOT moved (attach skipped)" "$B_FEATURE_BEFORE" "$(git -C "$B" rev-parse HEAD)"
 check "no attach summary emitted" "no" "$(has_summary "$outB")"
-check "status records the fetch" "yes" "$(status_has "dis-attach-$$" 'fetched and pruned')"
+check "status records the fetch" "yes" "$(status_has "dis-attach-$$" 'fetched every remote')"
 echo
 
 echo "--- both disabled: neither step runs ---"
@@ -81,7 +81,7 @@ check "origin/main advanced (fetch ran)" "$D_TIP" "$(git -C "$D" rev-parse origi
 check "feature fast-forwarded to the new tip (attach ran)" "$D_TIP" "$(git -C "$D" rev-parse HEAD)"
 check "attach summary emitted" "yes" "$(has_summary "$outD")"
 check "status records both steps" "yes" \
-      "$([[ "$(status_has "dis-none-$$" 'fetched and pruned')" == yes \
+      "$([[ "$(status_has "dis-none-$$" 'fetched every remote')" == yes \
           && "$(status_has "dis-none-$$" 'fast-forwarded feature')" == yes ]] && echo yes || echo no)"
 echo
 

@@ -7,9 +7,12 @@ prompt*, with no prompting and no configuration.
 
 At `SessionStart` it runs two steps, **in order, in one process**:
 
-1. **Fetch and prune.** Fetch every branch and every tag from the remote and prune
-   stale branch and tag refs, so the local remote-tracking refs are aligned with the
-   remote.
+1. **Fetch and prune.** Fetch every branch from every remote, pruning each remote's
+   own stale branch refs, then fetch tags from the primary remote only (the first
+   one configured) and prune stale tag refs against that one remote — tags are a
+   single ref space shared by every remote, so pruning them against more than one
+   would delete a tag that is local-only, or lives on a different remote, the
+   moment any one remote lacking it was fetched.
 2. **Attach the worktree.** Fast-forward the branch this tree is on to the remote's
    default branch (`main`, falling back to `master`) using the refs step 1 just
    fetched, then populate, attach, and fast-forward every **top-level** submodule to
@@ -108,9 +111,15 @@ nothing on a **detached HEAD** (there is no branch to attach or reconcile).
 
 ### Fetch — step 1
 
-`git fetch --all --tags --prune --prune-tags` on the main checkout's object store.
-Brings every branch and tag level with the remote and prunes refs the remote no longer
-has, so the attach step and the rest of the session see the true remote state.
+Two commands on the main checkout's object store: `git fetch --all --prune` brings
+every branch from every remote level with the remote, pruning each remote's own
+stale branch refs; `git fetch <remote> --tags --prune --prune-tags`, against the
+primary remote only, brings tags level with that remote and prunes stale tag refs.
+Tags are run separately, and against only one remote, because `refs/tags/*` is a
+single ref space shared by every remote — pruning it against more than one remote
+in the same pass would delete a tag the moment any one remote lacking it was
+fetched, even a tag the primary remote still has. Either command's failure is
+reported; the other still runs.
 
 ### Attach — `git-sync.sh`
 
@@ -165,17 +174,21 @@ result and the attach report, and is not shown to the agent. To read it yourself
 ```
 
 It also prints the current refs, read live with no fetch: the superproject's attached
-branch and commit id, the commit id of `origin/main` (falling back to `origin/master`),
-the commit id of the local `main` (falling back to `master`), and each top-level
+branch and commit id, the commit id of `<remote>/main` (falling back to
+`<remote>/master`, where `<remote>` is the repo's first configured remote), the
+commit id of the local `main` (falling back to `master`), and each top-level
 submodule's attached branch and commit id. `scripts/collect-refs.sh` produces this block.
 
 ## The `recap` skill
 
 `/git:recap` reports, for the superproject and each top-level submodule, the current
 branch and tracking remote (each with its commit id), the working-tree state, and the
-matching pull requests. It only reports — it never fetches (unless `RECAP_FETCH=1`),
-pushes, pulls, or commits. The pull-request section needs `gh` on `PATH` and
-authenticated; everything else works without it.
+matching pull requests — each repo's pull requests are looked up from inside that
+repo, so a submodule's PRs are never the superproject's. It then writes a short recap
+of the current conversation (asked / done / in flight / blocked) from session context.
+It only reports — it never fetches (unless `RECAP_FETCH=1`), pushes, pulls, or commits.
+The pull-request section needs `gh` on `PATH` and authenticated; everything else works
+without it.
 
 ## Running the scripts directly
 
@@ -205,6 +218,7 @@ git/
     ├── run.sh                  # every test; no arguments, no network
     ├── lib.sh                  # throwaway-repo scaffolding + assertions
     ├── test-fetch-prune.sh
+    ├── test-fetch-prune-tags-multiremote.sh
     ├── test-fetch-before-attach.sh
     ├── test-fetch-fail.sh
     ├── test-merge-sync.sh
@@ -213,7 +227,8 @@ git/
     ├── test-stale-session-branch.sh
     ├── test-detached-noop.sh
     ├── test-disable-switch.sh
-    └── test-launch-status-refs.sh
+    ├── test-launch-status-refs.sh
+    └── test-recap-submodule-prs.sh
 ```
 
 ```bash

@@ -1,8 +1,8 @@
 ---
 name: launch-status
-description: This skill should be used when the operator asks "what did the git plugin do at launch", "show the git launch status", "did the fetch run", "did the branch attach", "why are my remote refs stale", "why is my submodule detached", "which branch am I on", "what commit is main / origin/main", or wants to see the git plugin's most recent SessionStart result. Reports the attached branch and commit ids (superproject, origin/main or origin/master, local main or master, and each top-level submodule), plus the latest fetch/prune and worktree-attach status and any warnings recorded for this session. Read-only, human-invoked only.
+description: Reports the git plugin's most recent SessionStart fetch/attach result. Read-only, human-invoked only (disable-model-invocation).
 disable-model-invocation: true
-allowed-tools: Bash(cat *) Bash(bash *collect-refs.sh)
+allowed-tools: Bash(cat *) Bash(bash *collect-refs.sh*)
 ---
 
 # Git plugin launch status
@@ -20,11 +20,12 @@ bash "${CLAUDE_SKILL_DIR}/scripts/collect-refs.sh"
 
 Report the block above verbatim. It is read live when the skill runs, with no
 fetch: the superproject's attached branch and commit id, the commit id of the
-remote default branch (`origin/main`, falling back to `origin/master`), the commit
-id of the local default branch (`main`, falling back to `master`), and the attached
-branch and commit id of each top-level submodule. The remote id is as of the last
-fetch, which the git plugin runs at `SessionStart`. Report `detached HEAD`, `none`
-and `not initialised` as printed.
+remote default branch (`<remote>/main`, falling back to `<remote>/master`, where
+`<remote>` is the repo's first configured remote — usually but not always
+`origin`), the commit id of the local default branch (`main`, falling back to
+`master`), and the attached branch and commit id of each top-level submodule.
+The remote id is as of the last fetch, which the git plugin runs at
+`SessionStart`. Report `detached HEAD`, `none` and `not initialised` as printed.
 
 ## Latest status
 

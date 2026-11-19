@@ -28,19 +28,21 @@ JIRA ticket URLs are found, report a fatal error and stop.
 
 ## Output Directory Structure
 
-Unless an explicit artifact storage location is provided in the instructions, use the
-**launching directory** (the working directory from which this skill was invoked) as the
-base. Create a parent directory under the base using this format:
+Unless an explicit artifact storage location is provided in the instructions, use
+`${TMPDIR:-/tmp}` as the base — **not** the project's working directory, so this skill's
+output never shows up as untracked files in `git status` (which, among other things, is
+what the `git` plugin's SessionStart attach step treats as a dirty, un-syncable tree).
+Create a parent directory under the base using this format:
 
 ```
-<base>/${CLAUDE_SESSION_ID}-<timestamp>/
+${TMPDIR:-/tmp}/${CLAUDE_SESSION_ID}-<timestamp>/
 ```
 
 Where `<timestamp>` is the current Unix epoch in seconds. Under this parent, create one
 subdirectory per ticket:
 
 ```
-<base>/${CLAUDE_SESSION_ID}-<timestamp>/
+${TMPDIR:-/tmp}/${CLAUDE_SESSION_ID}-<timestamp>/
   |- <TICKET-ID-1>/
   |   |- content.md
   |   |- <attachment-file-1>
@@ -49,8 +51,6 @@ subdirectory per ticket:
   |   |- content.md
   |   |- ...
 ```
-
-Determine the launching directory by running `pwd` before creating any files.
 
 ## Fetching Procedure
 
@@ -62,7 +62,7 @@ Parse the ticket ID from the URL (e.g., `DT-123` from `https://....atlassian.net
 
 ### Step 2 — Fetch ticket data
 
-Use the available JIRA tools/integrations to retrieve the ticket. Fetch these fields:
+Use the JIRA MCP tool `getJiraIssue` to retrieve the ticket. Fetch these fields:
 
 - **ID** — the ticket key (e.g., `DT-123`)
 - **Title** — the summary field
@@ -128,29 +128,35 @@ If there are no comments, write `_No comments._` under the Comments heading.
 
 Download all attachment files for the ticket into the ticket's subdirectory alongside
 `content.md`, preserving the original filename. There are two sources of attachments — collect
-both, then deduplicate by filename before downloading:
+both, then deduplicate **by attachment id** (not filename — Jira allows two different
+attachments with the same filename, and deduplicating by name would silently drop one and
+make the other overwrite it on disk) before downloading:
 
 1. **Ticket attachments list** — retrieve the full list of attachments from the ticket's
-   `fields.attachment` array (returned by the JIRA API). Each entry includes the filename and
-   a direct download URL (`content` field).
+   `fields.attachment` array (returned by the JIRA API). Each entry includes the attachment
+   `id`, its `filename`, and a direct download URL (`content` field).
 2. **Inline references in description and comments** — identify any files embedded inline in
    the description or comments (e.g. `!filename.png!`, `[filename|^filename]`, or media nodes)
-   that may not appear in the attachments list. Resolve their direct download URL from the
-   ticket data.
+   that may not appear in the attachments list. Resolve their attachment id and direct download
+   URL from the ticket data.
+
+If two distinct attachments resolve to the same filename, save the second under a
+disambiguated name (e.g. `filename (2).ext`) rather than overwriting the first.
 
 For each unique attachment, follow this two-step procedure:
 
 1. **Determine the download URL** — resolve the direct download URL for the attachment from
    the ticket data (the URL that points to the raw file, not the Jira viewer page).
 
-2. **Invoke the download script** — run:
+2. **Invoke the download script** — run, with both paths quoted (Jira filenames routinely
+   contain spaces):
    ```
    bash ${CLAUDE_SKILL_DIR}/download-attachment-file.sh \
-     --out-file-path <absolute path under the ticket dir to save the file> \
-     --in-attachment-download-url <download URL from step 1>
+     --out-file-path "<absolute path under the ticket dir to save the file>" \
+     --in-attachment-download-url "<download URL from step 1>"
    ```
-   Read the stdout of the invocation for the result. A successful download prints
-   confirmation text; an error prints the failure reason.
+   Read the invocation's output for the result: on success it prints a confirmation line on
+   stdout; on failure it prints the reason on stderr and exits non-zero.
 
 If an attachment cannot be downloaded, log the error output as a warning and continue
 processing the remaining attachments.

@@ -48,7 +48,7 @@ Each plugin's own README documents its skills, configuration, and requirements.
   - **git**: `git` and `bash` 3.2 or newer. `jq` is optional. `gh` is optional, and only the `recap` skill's pull-request section uses it.
   - **implementation**: `adb` and an emulator or device for Android test runs.
   - **context7**: a Context7 API key in `MCP_CONTEXT7_API_KEY`.
-  - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`. The Jira skills' attachment transfer also needs `curl`, `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN`.
+  - **atlassian-api-token**: `base64(email:api_token)` in `MCP_ATLASSIAN_BASE64_ENCODED_EMAIL_AND_API_TOKEN`. The Jira skills' attachment transfer also needs `curl`, `jq`, `MCP_ATLASSIAN_ACCOUNT_USERNAME` and `MCP_ATLASSIAN_ACCOUNT_API_TOKEN`.
   - **websearch-plus**: at least one of `MCP_TAVILY_API_KEY`, `MCP_YOUCOM_API_KEY`. Providers without a key are skipped.
 
 ## Installation
@@ -73,11 +73,11 @@ You can also browse and install plugins from the `/plugin` menu. From a shell, t
 claude-code-engineering-assembly/
 ├── .claude-plugin/
 │   └── marketplace.json        # Marketplace index (lists every plugin)
-├── .github/                    # Issue/PR templates, CODEOWNERS, workflows
+├── .github/                    # Issue/PR templates, workflows
 └── plugins/
     └── <plugin-name>/
         ├── .claude-plugin/
-        │   └── plugin.json     # Plugin manifest (name, version, author)
+        │   └── plugin.json     # Plugin manifest (name, description, version, author, homepage, repository, license)
         ├── .mcp.json           # MCP server definitions (optional)
         ├── agents/             # Subagent definitions (optional)
         ├── hooks/              # Event hooks (optional)

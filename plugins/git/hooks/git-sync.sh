@@ -179,7 +179,7 @@ sync_submodules() {
 }
 
 main() {
-    local branch remote_sha sub_status=0
+    local branch remote_sha
 
     # Rule one: outside a git repo, or in a repo with no remote, this plugin does
     # nothing at all - silently.
@@ -211,7 +211,7 @@ main() {
     fi
 
     # Submodules last: they are the slow part.
-    sync_submodules || sub_status=$?
+    sync_submodules || true
 
     render_report
     # The pass ran (attached), regardless of a submodule sub-status - the

@@ -1,7 +1,7 @@
 {
   "name": "implementation",
   "description": "QA test automation for software development tasks: the automation-expert agent executes manual test cases, smoke and regression checks, and bug reproductions step-by-step on web or Android (via adb) and reports a PASS/FAIL table.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "Devrise Technology",
     "email": "hello@devrisetech.com"

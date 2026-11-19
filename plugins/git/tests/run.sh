@@ -12,7 +12,7 @@ readonly DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 failed=0
 
 echo "### syntax"
-for f in "$DIR"/../hooks/*.sh "$DIR"/../hooks/lib/*.sh "$DIR"/*.sh; do
+for f in "$DIR"/../hooks/*.sh "$DIR"/../hooks/lib/*.sh "$DIR"/../skills/*/scripts/*.sh "$DIR"/*.sh; do
     if bash -n "$f"; then
         echo "  PASS  $(basename "$f")"
     else
