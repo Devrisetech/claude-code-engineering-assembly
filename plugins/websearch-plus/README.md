@@ -21,7 +21,11 @@ The provider list is the maintainers' own choice: each has a hosted MCP endpoint
 
 ### Choosing providers
 
-You decide which providers are used. Set the API key only for the providers you want: a server whose variable is unset is not loaded, and Claude skips it. The order above is fixed in [`hooks/search-instruction.md`](hooks/search-instruction.md).
+You decide which providers are used. Set the API key only for the providers you want: Claude Code
+still loads a server whose variable is unset (as the literal, unexpanded `${MCP_*_API_KEY}` text in
+its `Authorization` header), but the resulting request is rejected, so that server connects to
+nothing and offers no tools — Claude moves straight to the next one in the order. The order above is
+fixed in [`hooks/search-instruction.md`](hooks/search-instruction.md).
 
 ## Configuration
 
@@ -85,6 +89,8 @@ To change the order or the rules, edit [`hooks/search-instruction.md`](hooks/sea
 
 ## Requirements
 
-- **Linux or macOS.** The `SessionStart` hook runs a Bash script. Windows is not supported.
+> [!WARNING]
+> **Linux and macOS only.** The `SessionStart` hook runs a Bash script. Windows is not supported.
+
 - At least one API key from the table above, exposed through its `MCP_*` environment variable.
 - Network access to the provider endpoints.
