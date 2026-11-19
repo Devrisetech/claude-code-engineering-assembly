@@ -50,6 +50,8 @@ jobs:
       DISABLE_AUTOUPDATER: "1"
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
 
       - name: Install Claude Code (native installer)
         run: |
@@ -151,7 +153,7 @@ jobs:
 
   ai-review-status:
     name: ai-review-status
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       statuses: read
     steps:
