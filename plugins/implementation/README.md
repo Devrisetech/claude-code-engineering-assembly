@@ -19,9 +19,9 @@ Executes manual test cases and flows step-by-step — end-to-end flows, smoke te
 
 Before running any steps, it rebuilds and restarts the app under test (dev server for web, fresh APK install for Android) so results reflect the current codebase, not stale state. It inspects app state before every action, tries multiple locator fallbacks before failing a step, and reports a final PASS/FAIL table with per-step notes. Artifacts (screenshots, UI dumps) are only captured when a step explicitly asks for one, and are saved to the launching directory using a `<type>_<slug>_<timestamp>.<ext>` naming convention.
 
-## System prerequisites
+## Requirements
 
-The `automation-expert` agent requires **adb** (Android platform-tools) and a running emulator or device for Android runs. Web runs use whatever browser automation skill or MCP tool is available in the session.
+The `automation-expert` agent requires **adb** (Android platform-tools) and a running emulator or device for Android runs; the `emulator` binary is only needed when it must launch the emulator itself. Web runs use whatever browser automation skill or MCP tool is available in the session.
 
 ## Installation
 
