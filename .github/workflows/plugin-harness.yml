@@ -1,0 +1,214 @@
+# Claude Code plugin harness — PR gate for a repo that holds Claude Code plugins.
+# Install at .github/workflows/plugin-harness.yml in the TARGET repo with
+# setup/agent-plugin-harness/INSTALL_PLAYBOOK.md, which fills the two placeholders below:
+#   - .claude-plugin/** : one `paths:` entry per line (the PR must touch one to run)
+#   - .github/workflows/plugin-harness.yml : one `paths:` entry per line (the PR must touch one to run)
+#   - plugins/*/** : one `paths:` entry per line (the PR must touch one to run)
+#   - .   : one plugin / marketplace root glob per line (bash globstar)
+#   - plugins/*   : one plugin / marketplace root glob per line (bash globstar)
+#
+# Two checks:
+#   - validate-plugins : `claude plugin validate --strict` on every plugin and marketplace under the
+#       root globs, plus every local plugin a marketplace lists. Fails on any error-level finding;
+#       warnings and notes are reported but do not fail.
+#   - ai-review-status : passes when the PR head commit carries a commit status named
+#       $AI_REVIEW_CONTEXT, in any state. The agent posts it after the plugin review that the
+#       CLAUDE.md snippet describes, then re-runs this job.
+#
+# No secrets needed: `claude plugin validate` runs without credentials, and reading commit
+# statuses uses the workflow's own GITHUB_TOKEN.
+name: Plugin harness
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".claude-plugin/**"
+      - ".github/workflows/plugin-harness.yml"
+      - "plugins/*/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-harness-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PLUGIN_ROOT_GLOBS: |
+    .
+    plugins/*
+  AI_REVIEW_CONTEXT: ci/ai/plugin-review
+  # Native installer channel (`stable`, `latest`) or an exact version such as `2.1.285`.
+  CLAUDE_CODE_VERSION: stable
+
+jobs:
+  validate-plugins:
+    name: validate-plugins
+    runs-on: ubuntu-latest
+    env:
+      DISABLE_AUTOUPDATER: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Claude Code (native installer)
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash -s "$CLAUDE_CODE_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Validate plugins
+        run: |
+          set -uo pipefail
+          shopt -s globstar nullglob
+          SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
+          # 1. Discover targets: plugin / marketplace roots under each glob, plus each marketplace's
+          #    local plugin sources (validating a marketplace checks only marketplace.json).
+          declare -A seen=()
+          targets=()
+          add() {
+            local d="${1%/}"
+            while [[ "$d" == ./* ]]; do d="${d#./}"; done
+            [ -z "$d" ] && d=.
+            [ -n "${seen[$d]:-}" ] && return
+            seen[$d]=1
+            targets+=("$d")
+          }
+          while IFS= read -r glob; do
+            glob="${glob#"${glob%%[![:space:]]*}"}"
+            glob="${glob%"${glob##*[![:space:]]}"}"
+            [ -z "$glob" ] && continue
+            for d in $glob; do
+              [ -d "$d" ] || continue
+              [ -f "$d/.claude-plugin/plugin.json" ] && add "$d"
+              if [ -f "$d/.claude-plugin/marketplace.json" ]; then
+                add "$d"
+                while IFS= read -r src; do
+                  [ -d "$d/$src" ] && add "$d/$src"
+                done < <(jq -r '(.metadata.pluginRoot // "") as $root
+                  | .plugins[]?.source | strings
+                  | if startswith("./") or startswith("../") then .
+                    elif $root != "" then "\($root)/\(.)" else empty end' \
+                  "$d/.claude-plugin/marketplace.json")
+              fi
+            done
+          done <<< "$PLUGIN_ROOT_GLOBS"
+
+          {
+            echo "## Claude Code plugin validation"
+            echo
+            echo "\`$(claude --version)\` · \`claude plugin validate --strict\` · fails on error-level findings only"
+            echo
+          } >> "$SUMMARY"
+
+          if [ "${#targets[@]}" -eq 0 ]; then
+            {
+              echo "❌ No plugin or marketplace found under the root globs:"
+              echo
+              echo '```text'
+              echo "$PLUGIN_ROOT_GLOBS"
+              echo '```'
+              echo "Fix \`PLUGIN_ROOT_GLOBS\` in this workflow, or re-run the install playbook."
+            } >> "$SUMMARY"
+            echo "::error::No plugin or marketplace found under PLUGIN_ROOT_GLOBS"
+            exit 1
+          fi
+
+          # 2. Validate each target; the verdict counts error-level findings in the JSON report.
+          fail=0
+          table="| Target | Type | Result | Errors | Warnings | Notes |"$'\n'"|---|---|---|---|---|---|"
+          details=""
+          for t in "${targets[@]}"; do
+            json="$(claude plugin validate --strict --json "$t" 2>/dev/null)"
+            text="$(claude plugin validate --strict "$t" 2>&1 | sed -e 's/\x1b\[[0-9;]*m//g' -e "s#$PWD/##g")"
+            if jq -e 'type == "object"' >/dev/null 2>&1 <<< "$json"; then
+              count() { jq "[.. | objects | select(has(\"$1\")) | .[\"$1\"] | arrays | .[]] | length" <<< "$json"; }
+              errors="$(count errors)"; warnings="$(count warnings)"; notes="$(count notes)"
+              type="$(jq -r '.manifest.type // "?"' <<< "$json")"
+              if ! [[ "$errors" =~ ^[0-9]+$ ]] || [ "$errors" -gt 0 ]; then
+                result="❌ fail"; fail=1
+                echo "::error title=Plugin validation::$t has $errors error-level finding(s)"
+              else
+                result="✅ pass"
+              fi
+            else
+              errors="?"; warnings="?"; notes="?"; type="?"
+              result="❌ no report"; fail=1
+              echo "::error title=Plugin validation::$t produced no JSON report"
+            fi
+            table+=$'\n'"| \`$t\` | $type | $result | $errors | $warnings | $notes |"
+            details+=$'\n'"<details><summary><code>$t</code> — $result</summary>"$'\n\n'
+            details+='```text'$'\n'"$text"$'\n''```'$'\n\n'"</details>"$'\n'
+          done
+
+          {
+            echo "$table"
+            echo
+            echo "### Full reports"
+            echo "$details"
+          } >> "$SUMMARY"
+          exit "$fail"
+
+  ai-review-status:
+    name: ai-review-status
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: read
+    steps:
+      - name: Check the AI plugin review status on the PR head commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -uo pipefail
+          SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
+          # The combined-status endpoint returns the latest status per context.
+          if ! raw="$(gh api --paginate "repos/$REPO/commits/$SHA/status?per_page=100")"; then
+            echo "::error::Could not read commit statuses for $SHA"
+            exit 1
+          fi
+          statuses="$(jq -s '[.[].statuses[]]' <<< "$raw")"
+          found="$(jq --arg ctx "$AI_REVIEW_CONTEXT" 'map(select(.context == $ctx)) | first // empty' <<< "$statuses")"
+
+          {
+            echo "## AI plugin review status"
+            echo
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Context | \`$AI_REVIEW_CONTEXT\` |"
+            echo "| Commit | \`$SHA\` |"
+            if [ -n "$found" ]; then
+              jq -r '"| Found | ✅ yes |",
+                     "| State | `\(.state)` |",
+                     "| Description | \(.description // "" | gsub("\\|"; "\\|")) |",
+                     "| Details | \(.target_url // "—") |",
+                     "| Posted by | \(.creator.login // "—") |",
+                     "| Updated | \(.updated_at) |"' <<< "$found"
+            else
+              echo "| Found | ❌ no |"
+            fi
+            echo
+            echo "### All statuses on this commit"
+            echo
+            if [ "$(jq length <<< "$statuses")" -eq 0 ]; then
+              echo "_None._"
+            else
+              echo "| Context | State | Description | Updated |"
+              echo "|---|---|---|---|"
+              jq -r '.[] | "| `\(.context)` | `\(.state)` | \(.description // "" | gsub("\\|"; "\\|")) | \(.updated_at) |"' <<< "$statuses"
+            fi
+            if [ -z "$found" ]; then
+              echo
+              echo "**Not reviewed yet.** In a Claude Code session, run the plugin review that"
+              echo "\`CLAUDE.md\` describes (section *Claude Code plugin review*). It posts"
+              echo "\`$AI_REVIEW_CONTEXT\` on this commit; then re-run this job."
+            fi
+          } >> "$SUMMARY"
+
+          if [ -z "$found" ]; then
+            echo "::error::Commit status '$AI_REVIEW_CONTEXT' is missing on $SHA"
+            exit 1
+          fi
+          echo "Found '$AI_REVIEW_CONTEXT' = $(jq -r .state <<< "$found")"

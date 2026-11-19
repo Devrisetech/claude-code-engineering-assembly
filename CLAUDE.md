@@ -77,3 +77,98 @@ The root `README.md` is the public face of the repo. Keep it aligned with the co
 - **Commit each unit of work:** when a unit of work is complete, make a git commit. Use the
   `commit-commands:commit` skill (or `commit-commands:commit-push-pr` when a PR is wanted) rather than
   raw `git commit`. Messages follow Conventional Commits (`feat(git): …`, `fix(marketplace): …`).
+
+<!-- BEGIN agent-plugin-harness -->
+## Claude Code plugin review
+
+This repo holds Claude Code plugins, and its PRs are gated by
+`.github/workflows/plugin-harness.yml`. The `ai-review-status` check in that workflow passes only
+when the PR head commit carries the commit status **`ci/ai/plugin-review`**. You post that status
+when you finish the review below. Run the review before you report plugin work as done, and again
+after every push that changes a plugin.
+
+Plugin and marketplace roots in this repo:
+
+- `.`
+- `plugins/*`
+
+### 1. Identify the in-progress plugins
+
+Work out which plugins this session is working on:
+
+- the files you created or edited in this session;
+- `git diff --name-only "origin/$BASE...HEAD"`, where `BASE` is the PR base branch
+  (`gh pr view --json baseRefName -q .baseRefName`) or the default branch when no PR is open;
+- `git status --porcelain` for uncommitted changes.
+
+Map each changed file to its nearest plugin root, the closest parent directory that has
+`.claude-plugin/plugin.json` under the roots above. A changed `.claude-plugin/marketplace.json`
+puts that marketplace in scope. If nothing maps to a plugin, stop here: there is nothing to review
+and no status to post.
+
+### 2. Review each plugin with `plugin-dev:` agents and skills
+
+For each plugin in scope:
+
+- Run `claude plugin validate --strict <plugin-root>`. Every error-level finding is **critical**.
+- Delegate an audit to the `plugin-dev:plugin-validator` agent. Do this for every plugin.
+- If skills changed, delegate to the `plugin-dev:skill-reviewer` agent.
+- For other changed components, load the matching skill and check the changes against it:
+  `plugin-dev:agent-development` for agents, `plugin-dev:command-development` for commands,
+  `plugin-dev:hook-development` for hooks, `plugin-dev:mcp-integration` for MCP servers,
+  `plugin-dev:plugin-settings` for plugin settings, and `plugin-dev:plugin-structure` for layout
+  and the manifest.
+
+Give every finding one severity:
+
+| Severity | Meaning |
+| --- | --- |
+| **blocker** | The plugin fails to load, or a component is broken or unsafe. |
+| **critical** | A validation error, or a component that won't trigger or run as intended. |
+| **major** | A real defect that does not break the plugin but should be fixed. |
+| **minor** / **info** | Style, wording, suggestions. |
+
+### 3. Post the commit status `ci/ai/plugin-review`
+
+The status goes on the commit GitHub has. Push first, then use the pushed head:
+`SHA=$(git rev-parse HEAD)`, which must equal `git rev-parse @{upstream}`.
+
+1. **Pick a credential, or stop.** If `gh auth status` succeeds, use `gh`. Otherwise, if
+   `GH_TOKEN` or `GITHUB_TOKEN` is set, use the REST API with `curl`. If neither works, **stop**:
+   tell the user that the status could not be posted, and why. Do not mark the review as done.
+2. **Choose the state:** `failure` if any finding is **critical or blocker**, `success` otherwise.
+3. **Post it.** Posting the same context again replaces the earlier status, so this both creates
+   and edits it. The `description` must be at most 140 characters; summarize the counts there, e.g.
+   `0 critical, 2 major, 3 minor — plugins: foo, bar`.
+
+   ```bash
+   REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # or owner/repo from the remote URL
+   # With gh:
+   gh api "repos/$REPO/statuses/$SHA" -f state="$STATE" \
+     -f context=ci/ai/plugin-review -f description="$DESCRIPTION"
+   # With a token:
+   curl -fsS -X POST -H "Authorization: Bearer ${GH_TOKEN:-$GITHUB_TOKEN}" \
+     -H "Accept: application/vnd.github+json" \
+     "https://api.github.com/repos/$REPO/statuses/$SHA" \
+     -d "$(jq -n --arg s "$STATE" --arg d "$DESCRIPTION" \
+           '{state:$s, context:"ci/ai/plugin-review", description:$d}')"
+   ```
+
+4. **Re-run the gate.** If a PR is open for the branch, its `ai-review-status` job ran before the
+   status existed and failed. Re-run it with `gh`:
+
+   ```bash
+   RUN=$(gh run list --workflow plugin-harness.yml --commit "$SHA" --limit 1 --json databaseId -q '.[0].databaseId')
+   [ -n "$RUN" ] && gh run rerun "$RUN" --failed
+   ```
+
+### 4. Report
+
+Tell the user:
+
+- which plugins you reviewed and the findings for each, grouped by severity;
+- the state you posted and the commit it is on, or why you could not post it.
+
+Fix critical and blocker findings only when the user asks you to. After a fix and a push, run the
+review again so the status is on the new commit.
+<!-- END agent-plugin-harness -->
