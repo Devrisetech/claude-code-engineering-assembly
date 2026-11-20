@@ -8,8 +8,7 @@
 
 ## Checklist
 
-- [ ] `claude plugin validate .` passes
-- [ ] `bash plugins/git/tests/run.sh` passes (if `plugins/git` changed)
+- [ ] Required checks pass (`validate-plugins`, `git-tests`, `ai-review-status` — run by the plugin-harness workflow)
 - [ ] `version` bumped in each changed plugin's `plugin.json`
 - [ ] Plugin added, removed, renamed, or re-described? `marketplace.json`, the README **Plugins** table, and the plugin README are updated
 - [ ] Plugin README documents any new or changed behaviour
