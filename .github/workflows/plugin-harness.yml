@@ -1,19 +1,26 @@
 # Claude Code plugin harness — PR gate for a repo that holds Claude Code plugins.
 # Install at .github/workflows/plugin-harness.yml in the TARGET repo with
-# setup/agent-plugin-harness/INSTALL_PLAYBOOK.md, which fills the two placeholders below:
-#   - .claude-plugin/** : one `paths:` entry per line (the PR must touch one to run)
-#   - .github/workflows/plugin-harness.yml : one `paths:` entry per line (the PR must touch one to run)
-#   - plugins/*/** : one `paths:` entry per line (the PR must touch one to run)
+# setup/agent-plugin-harness/INSTALL_PLAYBOOK.md, which fills the placeholders below:
+#   - .claude-plugin/**,plugins/*/** : the path globs the `changes` job watches (per `paths-changed`)
 #   - .   : one plugin / marketplace root glob per line (bash globstar)
 #   - plugins/*   : one plugin / marketplace root glob per line (bash globstar)
 #
-# Two checks:
+# The workflow runs on every PR so its checks always report (a required check that never reports
+# blocks the PR forever). The `changes` job decides which path groups a PR touched, and each real
+# job self-gates on that: when its paths are untouched it reports success without doing the work, so
+# a workflow-only or docs-only PR passes the gate instead of hanging on an "Expected" check.
+#
+# Jobs:
+#   - changes : computes which path groups the PR changed (plugins, git). Not a gate itself.
 #   - validate-plugins : `claude plugin validate --strict` on every plugin and marketplace under the
 #       root globs, plus every local plugin a marketplace lists. Fails on any error-level finding;
-#       warnings and notes are reported but do not fail.
+#       warnings and notes are reported but do not fail. Skips to success when no plugin files change.
+#   - git-tests : runs `bash plugins/git/tests/run.sh` when the PR touches `plugins/git/`; otherwise
+#       reports success without running it.
 #   - ai-review-status : passes when the PR head commit carries a commit status named
 #       $AI_REVIEW_CONTEXT, in any state. The agent posts it after the plugin review that the
-#       CLAUDE.md snippet describes, then re-runs this job.
+#       CLAUDE.md snippet describes, then re-runs this job. Skips to success when no plugin files
+#       change (nothing to review).
 #
 # No secrets needed: `claude plugin validate` runs without credentials, and reading commit
 # statuses uses the workflow's own GITHUB_TOKEN.
@@ -22,10 +29,6 @@ name: Plugin harness
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - ".claude-plugin/**"
-      - ".github/workflows/plugin-harness.yml"
-      - "plugins/*/**"
 
 permissions:
   contents: read
@@ -43,20 +46,76 @@ env:
   CLAUDE_CODE_VERSION: stable
 
 jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-slim
+    outputs:
+      plugins: ${{ steps.filter.outputs.plugins }}
+      git: ${{ steps.filter.outputs.git }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -uo pipefail
+          files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA")"
+          plugins=false
+          git=false
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              .claude-plugin/*|plugins/*/*) plugins=true ;;
+            esac
+            case "$f" in
+              plugins/git/*) git=true ;;
+            esac
+          done <<< "$files"
+          echo "plugins=$plugins" >> "$GITHUB_OUTPUT"
+          echo "git=$git" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Changed path groups"
+            echo
+            echo "| Group | Changed |"
+            echo "|---|---|"
+            echo "| plugins (\`.claude-plugin/**\`, \`plugins/*/**\`) | $plugins |"
+            echo "| git (\`plugins/git/**\`) | $git |"
+          } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
   validate-plugins:
     name: validate-plugins
+    needs: changes
     runs-on: ubuntu-latest
     env:
       DISABLE_AUTOUPDATER: "1"
     steps:
+      - name: Skip — no plugin files changed
+        if: needs.changes.outputs.plugins != 'true'
+        run: |
+          {
+            echo "## Claude Code plugin validation"
+            echo
+            echo "⏭️ Skipped — no plugin or marketplace files changed in this PR."
+          } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
       - uses: actions/checkout@v7
+        if: needs.changes.outputs.plugins == 'true'
+        with:
+          fetch-depth: 1
 
       - name: Install Claude Code (native installer)
+        if: needs.changes.outputs.plugins == 'true'
         run: |
           curl -fsSL https://claude.ai/install.sh | bash -s "$CLAUDE_CODE_VERSION"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Validate plugins
+        if: needs.changes.outputs.plugins == 'true'
         run: |
           set -uo pipefail
           shopt -s globstar nullglob
@@ -149,13 +208,69 @@ jobs:
           } >> "$SUMMARY"
           exit "$fail"
 
+  git-tests:
+    name: git-tests
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip — no git plugin files changed
+        if: needs.changes.outputs.git != 'true'
+        run: |
+          {
+            echo "## git plugin tests"
+            echo
+            echo "⏭️ Skipped — no files under \`plugins/git/\` changed in this PR."
+          } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
+      - uses: actions/checkout@v7
+        if: needs.changes.outputs.git == 'true'
+        with:
+          fetch-depth: 1
+
+      - name: Run git plugin test suite
+        if: needs.changes.outputs.git == 'true'
+        run: |
+          set -uo pipefail
+          SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
+          out="$(bash plugins/git/tests/run.sh 2>&1)"; rc=$?
+          {
+            echo "## git plugin tests"
+            echo
+            if [ "$rc" -eq 0 ]; then
+              echo "✅ \`bash plugins/git/tests/run.sh\` passed."
+            else
+              echo "❌ \`bash plugins/git/tests/run.sh\` failed (exit $rc)."
+            fi
+            echo
+            echo "<details open><summary>Test output</summary>"
+            echo
+            echo '```text'
+            echo "$out"
+            echo '```'
+            echo
+            echo "</details>"
+          } >> "$SUMMARY"
+          exit "$rc"
+
   ai-review-status:
     name: ai-review-status
-    runs-on: ubuntu-latest
+    needs: changes
+    runs-on: ubuntu-slim
     permissions:
       statuses: read
     steps:
+      - name: Skip — no plugin files changed
+        if: needs.changes.outputs.plugins != 'true'
+        run: |
+          {
+            echo "## AI plugin review status"
+            echo
+            echo "⏭️ Skipped — no plugin or marketplace files changed, so there is nothing to review."
+          } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+
       - name: Check the AI plugin review status on the PR head commit
+        if: needs.changes.outputs.plugins == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
